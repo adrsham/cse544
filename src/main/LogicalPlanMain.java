@@ -3,6 +3,7 @@ package main;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -17,11 +18,27 @@ import Zql.ZqlParser;
 
 
 public class LogicalPlanMain {
+	public static final String INSTRUCTIONS = 
+			"Usage: java Main <username> <password> <database name>";
+	public static final String CONN_FAIL = "Error connecting to db";
 
 	public static final String[] SQL_COMMANDS = { "select", "from", "where"/*,
         "group by", "max(", "min(", "avg(", "count" */};
+	
+	private static DatabaseConnector con;
 
 	public static void main(String[] argv) throws IOException {
+		if (argv.length != 3) {
+			System.err.println(INSTRUCTIONS);
+			return;
+		}
+		
+		initializeDBConnection(argv);
+		if (!con.connectionValid()) {
+			System.err.println(CONN_FAIL);
+			return;
+		}
+		
 		Scanner reader = new Scanner(System.in);
 /*
 		// Add really stupid tab completion for simple SQL
@@ -49,7 +66,9 @@ public class LogicalPlanMain {
 				}
 
 				processStatement(new ByteArrayInputStream(statementBytes));
-
+				System.out.println();
+				System.out.println(con.runSQL(cmd));
+				
 				// Grab the remainder of the line
 				line = line.substring(split + 1);
 				buffer = new StringBuilder();
@@ -64,6 +83,11 @@ public class LogicalPlanMain {
 		reader.close();
 	}
 	
+	private static void initializeDBConnection(String[] argv) {
+		con = DatabaseConnector.getInstance();
+		con.connect(argv[2], argv[0], argv[1]);
+	}
+
 	@SuppressWarnings("unchecked")
     public static void processStatement(InputStream is) {
         try {
