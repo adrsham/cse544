@@ -41,4 +41,34 @@ public class Util {
         INT,
         TEXT
     }
+    
+    /**
+	 * Parse string and turn it into table class
+	 * 
+	 * @param stringInput string to be parsed
+	 * @return Table object
+	 */
+	public static Table parseStringToTable (String stringInput) {
+		return null;
+	}
+	
+	/**
+	 * Takes the given string and writes it to a file
+	 * 
+	 * @param fileLocation location of file
+	 * @param content content to be written to file
+	 */
+	public static void writeToFile (String fileLocation, String content) {
+		
+	}
+	
+	/**
+	 * Returns the string read from a file
+	 * 
+	 * @param fileLocation location of file
+	 * @return string contents of file
+	 */
+	public static String readFromFile (String fileLocation) {
+		return null;
+	}
 }
