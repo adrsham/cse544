@@ -67,5 +67,20 @@ public class UtilTest {
 		assertEquals("id", td.getFieldName(1));
 		assertEquals(Type.INT, td.getFieldType(1));
 	}
-
+	
+	/**
+	 * Try parsing something from the DB query
+	 */
+	@Test
+	public void parseFromDB() {
+		DatabaseConnector db = DatabaseConnector.getInstance();
+		db.connect("testdb", "adrian", "test");
+		Table t = Util.parseStringToTable(db.runSQL("SELECT * FROM num;"));
+		TableDescriptor td = t.getTD();
+		assertEquals(1, t.size());
+		assertEquals("name", td.getFieldName(0));
+		assertEquals(Type.TEXT, td.getFieldType(0));
+		assertEquals("id", td.getFieldName(1));
+		assertEquals(Type.INT, td.getFieldType(1));
+	}
 }
