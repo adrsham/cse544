@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -70,32 +71,48 @@ public class DatabaseConnector {
 	 */
 	public String runSQL (String query) {
 		StringBuilder buf = new StringBuilder();
-		List<List<String>> rows = new LinkedList<>();
 		try (PreparedStatement q = con.prepareStatement(query)) {
 			ResultSet rs = q.executeQuery();
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int columnCount = rsmd.getColumnCount();
+			//store column names
+			for (int i = 1; i <= columnCount; i++) {
+				//print column
+				buf.append(String.format("%"+rsmd.getColumnLabel(i).length()+"s (%"+rsmd.getColumnTypeName(i).length()+"s)  ", 
+						rsmd.getColumnLabel(i), rsmd.getColumnTypeName(i)));
+			}
+			buf.append(System.lineSeparator());
+			//store line
+			int colsWidth = 0;
+			for (int i = 1; i <= columnCount; i++) {
+				colsWidth += getColumnWidth(rsmd, i);
+			}
+			for (int i = 0; i < colsWidth; i++) {
+				buf.append("-");
+			}
+			buf.append(System.lineSeparator());
+			//store tuples
 			
 			while (rs.next()) {
-				List<String> oneRow = new LinkedList<>();
 				for (int i = 1; i <= columnCount; i++) {
-					oneRow.add(rs.getString(i));
+					if (rsmd.getColumnType(i) == Types.INTEGER) {
+						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s", rs.getInt(i)));
+					} else {
+						//text
+						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s", rs.getString(i)));
+					}
 				}
-				rows.add(oneRow);
+				buf.append(System.lineSeparator());
 			}
-			for (int i = 1; i <= columnCount; i++) {
-				buf.append(rsmd.getColumnName(i)+"\t");
-			}
-			buf.append("\n");
-			for (List<String> oneRow : rows) {
-				for (String col : oneRow) {
-					buf.append(col+"\t");
-				}
-				buf.append("\n");
-			}
+			
+			
 		} catch (SQLException e) {
 			LOG.log(Level.SEVERE, "Failed to execute query", e);
 		}
 		return buf.toString();
+	}
+	
+	private int getColumnWidth(ResultSetMetaData rsmd, int i) throws SQLException {
+			return rsmd.getColumnLabel(i).length() + rsmd.getColumnTypeName(i).length() + 5;
 	}
 }
