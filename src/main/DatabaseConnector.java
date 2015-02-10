@@ -24,6 +24,11 @@ public class DatabaseConnector {
 	private static DatabaseConnector db = null;
 	private Connection con = null;
 	
+	/*Integer type name*/
+	public static final String INT_TYPE_NAME = "int4";
+	/*Text type name*/
+	public static final String STRING_TYPE_NAME = "text";
+	
 	private DatabaseConnector() {
 		
 	}
