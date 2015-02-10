@@ -1,9 +1,9 @@
 package main;
 
-import java.io.ByteArrayInputStream;
+//import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
+import java.io.UnsupportedEncodingException;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -21,9 +21,9 @@ public class LogicalPlanMain {
 	public static final String INSTRUCTIONS = 
 			"Usage: java Main <username> <password> <database name>";
 	public static final String CONN_FAIL = "Error connecting to db";
-
-	public static final String[] SQL_COMMANDS = { "select", "from", "where"/*,
-        "group by", "max(", "min(", "avg(", "count" */};
+	
+	public static final String INTRO =
+			"UpdateDB Console ver 1.\nType \"h\" or \"help\" for help.\n";
 	
 	private static DatabaseConnector con;
 
@@ -40,43 +40,24 @@ public class LogicalPlanMain {
 		}
 		
 		Scanner reader = new Scanner(System.in);
-/*
-		// Add really stupid tab completion for simple SQL
-		ArgumentCompletor completor = new ArgumentCompletor(
-				new SimpleCompletor(SQL_COMMANDS));
-		completor.setStrict(false); // match at any position
-		reader.addCompletor(completor);*/
-
-		StringBuilder buffer = new StringBuilder();
+		System.out.println(INTRO);
 		boolean quit = false;
 		System.out.print("UpdateDB> ");
-		String line = reader.nextLine();
+		String line = reader.nextLine().toLowerCase();
 		while (!quit && line != null) {
-			// Split statements at ';': handles multiple statements on one
-			// line, or one statement spread across many lines
-			while (line.indexOf(';') >= 0) {
-				int split = line.indexOf(';');
-				buffer.append(line.substring(0, split + 1));
-				String cmd = buffer.toString().trim();
-				cmd = cmd.substring(0, cmd.length() - 1).trim() + ";";
-				byte[] statementBytes = cmd.getBytes("UTF-8");
-				if (cmd.equalsIgnoreCase("quit;") || cmd.equalsIgnoreCase("exit;")) {
-					quit = true;
-					break;
-				}
+			if (line.startsWith("q") || line.startsWith("e")) {
+				quit = true;
+				break;
+			} else if (line.startsWith("h")) {
+				printHelp();
+			} else if (line.startsWith("s")) {
+				// run statement and print out results
+				printStatementResults(line);
+			} else if (line.startsWith("u")) {
+				// run statement, compare, get back new statement
+				printUpdateQuery(line);
+			}
 
-				processStatement(new ByteArrayInputStream(statementBytes));
-				System.out.println();
-				System.out.println(con.runSQL(cmd));
-				
-				// Grab the remainder of the line
-				line = line.substring(split + 1);
-				buffer = new StringBuilder();
-			}
-			if (line.length() > 0) {
-				buffer.append(line);
-				buffer.append("\n");
-			}
 			System.out.print("UpdateDB> ");
 			line = reader.nextLine();
 		}
@@ -86,6 +67,57 @@ public class LogicalPlanMain {
 	private static void initializeDBConnection(String[] argv) {
 		con = DatabaseConnector.getInstance();
 		con.connect(argv[2], argv[0], argv[1]);
+	}
+	
+	public static void printHelp() {
+		System.out.println("You are using the commandline interface of UpdateDB ver 1");
+		System.out.println("Type h|help to view menu");
+		System.out.println("     s \"[sql statement]\" to run query and get results");
+		System.out.println("     u \"[sql statement]\" [filename containing csv of expected results] to get updated query");
+		System.out.println("     q|e|quit|exit to quit application");
+	}
+	
+	public static void printStatementResults(String line) throws UnsupportedEncodingException {
+		// parse the line. make sure it is the right format
+		String fileLocation = null;
+		String[] lineSplit = line.split(">");
+		if (lineSplit.length == 1) {
+			lineSplit = lineSplit[0].split("\"");
+		} else if (lineSplit.length == 2) {
+			System.out.println("lalalal");
+			fileLocation = lineSplit[1].trim();
+			lineSplit = lineSplit[0].trim().split("\"");
+		} else {
+			System.out.println("statement for s was not typed correctly.");
+			return;
+		}
+		if (lineSplit.length != 2) {
+			System.out.println("statement for s was not typed correctly.");
+			return;
+		}
+			
+		String statement = lineSplit[1];
+		//processStatement(new ByteArrayInputStream(statement.getBytes("UTF-8")));
+		//System.out.println();
+		
+		String results = con.runSQL(statement);
+		if (fileLocation != null) {
+			Util.writeToFile(fileLocation, results);
+		}
+		System.out.println(results);
+	}
+	
+	public static void printUpdateQuery(String line) {
+		String[] lineSplit = line.split("\"");
+		if (lineSplit.length != 3) {
+			System.out.println("statement for u was not typed correctly.");
+			return;
+		}
+		String statementResults = con.runSQL(lineSplit[1]);
+		String fileResults = Util.readFromFile(lineSplit[2].trim());
+		
+		System.out.println(statementResults);
+		System.out.println(fileResults);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -144,7 +176,7 @@ public class LogicalPlanMain {
 
             }
         } catch (Exception e) {
-        	
+        	System.out.println("there is an error with processing the statement");
         }
     }
 	
