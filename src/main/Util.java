@@ -3,10 +3,12 @@ package main;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,7 +64,76 @@ public class Util {
 	 * @return Table object
 	 */
 	public static Table parseStringToTable (String stringInput) {
-		return null;
+		Objects.requireNonNull(stringInput);
+		//split on each line
+		String[] lines = stringInput.split(System.lineSeparator());
+		
+		ArrayList <Type> typeAr = new ArrayList<>();
+		ArrayList <String> nameAr = new ArrayList<>();
+		ArrayList <String> aliasAr = new ArrayList<>();
+		ArrayList <String> tableAr = new ArrayList<>();
+		TableDescriptor td = null;
+		Table table = null;
+		
+		for (int i = 0; i < lines.length; i++) {
+			//first line is column title
+			if (i == 0) {
+				String[] line = lines[0].split("\\s+");
+				for (int j = 0; j < line.length; j++) {
+					if (j % 2 == 0) {
+						//name
+						nameAr.add(line[j]);
+					} else {
+						//type
+						if (line[j].trim().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
+							typeAr.add(Type.TEXT);
+						} else if (line[j].trim().equals("("+DatabaseConnector.INT_TYPE_NAME+")")) {
+							typeAr.add(Type.INT);
+						} else {
+							throw new RuntimeException("Unsupported type!");
+						}
+					}
+				}
+				for (int j = 0; j < typeAr.size(); j++) {
+					aliasAr.add(null);
+					tableAr.add(null);
+				}
+				//create table descriptor
+				Type[] typeArr = new Type[typeAr.size()];
+				typeArr = typeAr.toArray(typeArr);
+				String[] nameArr = new String[typeAr.size()];
+				nameArr = nameAr.toArray(nameArr);
+				String[] aliasArr = new String[typeAr.size()];
+				aliasArr = aliasAr.toArray(aliasArr);
+				String[] tableArr = new String[typeAr.size()];
+				tableArr = tableAr.toArray(tableArr);
+				td = new TableDescriptor(typeArr, nameArr, aliasArr, tableArr);
+				//create table
+				table = new Table(td);
+				continue;
+			}
+			//second line is line ("---"), ignore
+			if (i == 1) {
+				continue;
+			}
+			//third onwards are tuples
+			Tuple t = new Tuple(typeAr.size());
+			
+			String[] line = lines[i].split("\\s+");
+			for (int j = 0; j < line.length; j++) {
+				if (typeAr.get(j) == Type.INT) {
+					t.setField(j, new IntField(Integer.parseInt(line[j].trim())));
+				} else if (typeAr.get(j) == Type.TEXT) {
+					t.setField(j, new StringField(line[j].trim()));
+				} else {
+					throw new RuntimeException("Unsupported type!");
+				}
+			}
+			//insert tuple
+			table.add(t);
+		}
+		
+		return table;
 	}
 	
 	/**

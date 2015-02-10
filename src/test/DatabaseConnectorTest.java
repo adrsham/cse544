@@ -15,4 +15,11 @@ public class DatabaseConnectorTest {
 		db.connect("testdb", "adrian", "test");
 		System.out.println(db.runSQL("SELECT * FROM students;"));
 	}
+	
+	@Test
+	public void intConnectionTest() {
+		DatabaseConnector db = DatabaseConnector.getInstance();
+		db.connect("testdb", "adrian", "test");
+		System.out.println(db.runSQL("SELECT * FROM num;"));
+	}
 }
