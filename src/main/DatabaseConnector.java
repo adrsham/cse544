@@ -7,8 +7,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +23,11 @@ public class DatabaseConnector {
 	private static final Logger LOG = Logger.getLogger(DatabaseConnector.class.getName());
 	private static DatabaseConnector db = null;
 	private Connection con = null;
+	
+	/*Integer type name*/
+	public static final String INT_TYPE_NAME = "int4";
+	/*Text type name*/
+	public static final String STRING_TYPE_NAME = "text";
 	
 	private DatabaseConnector() {
 		

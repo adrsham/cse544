@@ -35,4 +35,8 @@ public class Table {
     public int size() {
     	return tuples.size();
     }
+    
+    public TableDescriptor getTD() {
+    	return td; // to test if parsing is working
+    }
 }
