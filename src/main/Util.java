@@ -3,7 +3,6 @@ package main;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,6 +56,12 @@ public class Util {
         TEXT
     }
     
+    public static String correctStatementFormat(String statement) {
+		statement = statement.trim();
+		if (!statement.endsWith(";"))
+			statement += ";";
+		return statement;
+    }
     /**
 	 * Parse string and turn it into table class
 	 * 
