@@ -74,13 +74,17 @@ public class UtilTest {
 	@Test
 	public void parseFromDB() {
 		DatabaseConnector db = DatabaseConnector.getInstance();
-		db.connect("testdb", "adrian", "test");
+		db.connect(DatabaseConnectorTest.DB, DatabaseConnectorTest.USER, DatabaseConnectorTest.PASSWORD);
+		db.executeUpdate("CREATE table num (name text, id int);");
+		db.executeUpdate("INSERT INTO num VALUES ('adrian', 1266067);");
 		Table t = Util.parseStringToTable(db.runSQL("SELECT * FROM num;"));
+		
 		TableDescriptor td = t.getTD();
 		assertEquals(1, t.size());
 		assertEquals("name", td.getFieldName(0));
 		assertEquals(Type.TEXT, td.getFieldType(0));
 		assertEquals("id", td.getFieldName(1));
 		assertEquals(Type.INT, td.getFieldType(1));
+		db.executeUpdate("DROP TABLE num;");
 	}
 }
