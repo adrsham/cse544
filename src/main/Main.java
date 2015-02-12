@@ -80,7 +80,7 @@ public class Main {
 		// parse the line. make sure it is the right format
 		System.out.print("sql statement: ");
 		String statement = Util.correctStatementFormat(reader.nextLine());
-		System.out.print("filepath (leave black to save to no file): ");
+		System.out.print("filepath (leave blank to just print to stdout): ");
 		String fileLocation = reader.nextLine();
 		ZQuery query = getQuery(statement);
 		processStatement(query);
@@ -99,27 +99,23 @@ public class Main {
 		String statement = Util.correctStatementFormat(reader.nextLine());
 		System.out.print("expected result filepath: ");
 		String file = reader.nextLine();
-		System.out.print("filepath (leave black to save to no file): ");
+		System.out.print("filepath (leave blank to just print to stdout): ");
 		String fileLocation = reader.nextLine();
 		
 		String statementResults = con.runSQL(statement);
-		Table statementTable = Util.parseStringToTable(statementResults);
+		Table original = Util.parseStringToTable(statementResults);
 		String fileResults = Util.readFromFile(file);
-		Table fileTable = Util.parseStringToTable(fileResults);
+		Table modified = Util.parseStringToTable(fileResults);
 
+		String resultQuery = QueryGenerator.generate(getQuery(statement), original, modified);
 		if (!fileLocation.equals("")) {
-			Util.writeToFile(fileLocation, statementResults);
-			Util.writeToFile(fileLocation, fileResults);
+			Util.writeToFile(fileLocation, resultQuery);
 		}
-		System.out.println(statementResults);
-		System.out.println(fileResults);
+		System.out.println(resultQuery);
 	}
 
 	public static ZQuery getQuery(String statement) {
 		try {
-			if (!statement.endsWith(";")) {
-				statement += ";";
-			}
 			byte[] statementBytes = statement.getBytes("UTF-8");
 			ZqlParser p = new ZqlParser(new ByteArrayInputStream(statementBytes));
 

@@ -81,8 +81,9 @@ public class DatabaseConnector {
 			//store column names
 			for (int i = 1; i <= columnCount; i++) {
 				//print column
-				buf.append(String.format("%"+rsmd.getColumnLabel(i).length()+"s (%"+rsmd.getColumnTypeName(i).length()+"s)   ", 
-						rsmd.getColumnLabel(i), rsmd.getColumnTypeName(i)));
+				buf.append(rsmd.getColumnLabel(i) + " (" + rsmd.getColumnTypeName(i) + ")\t");
+/*				buf.append(String.format("%"+rsmd.getColumnLabel(i).length()+"s (%"+rsmd.getColumnTypeName(i).length()+"s)   ", 
+						rsmd.getColumnLabel(i), rsmd.getColumnTypeName(i)));*/
 			}
 			buf.append(System.lineSeparator());
 			//store line
@@ -99,10 +100,12 @@ public class DatabaseConnector {
 			while (rs.next()) {
 				for (int i = 1; i <= columnCount; i++) {
 					if (rsmd.getColumnType(i) == Types.INTEGER) {
-						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s ", rs.getInt(i)));
+						//buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s ", rs.getInt(i)));
+						buf.append(rs.getInt(i) + "\t");
 					} else {
 						//text
-						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s ", rs.getString(i)));
+						//buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s ", rs.getString(i)));
+						buf.append(rs.getString(i) + "\t");
 					}
 				}
 				buf.append(System.lineSeparator());

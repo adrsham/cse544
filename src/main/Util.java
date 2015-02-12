@@ -80,51 +80,42 @@ public class Util {
 		TableDescriptor td = null;
 		Table table = null;
 		
-		for (int i = 0; i < lines.length; i++) {
-			//first line is column title
-			if (i == 0) {
-				String[] line = lines[0].split("\\s+");
-				for (int j = 0; j < line.length; j++) {
-					if (j % 2 == 0) {
-						//name
-						nameAr.add(line[j]);
-					} else {
-						//type
-						if (line[j].trim().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
-							typeAr.add(Type.TEXT);
-						} else if (line[j].trim().equals("("+DatabaseConnector.INT_TYPE_NAME+")")) {
-							typeAr.add(Type.INT);
-						} else {
-							throw new RuntimeException("Unsupported type!");
-						}
-					}
-				}
-				for (int j = 0; j < typeAr.size(); j++) {
-					aliasAr.add(null);
-					tableAr.add(null);
-				}
-				//create table descriptor
-				Type[] typeArr = new Type[typeAr.size()];
-				typeArr = typeAr.toArray(typeArr);
-				String[] nameArr = new String[typeAr.size()];
-				nameArr = nameAr.toArray(nameArr);
-				String[] aliasArr = new String[typeAr.size()];
-				aliasArr = aliasAr.toArray(aliasArr);
-				String[] tableArr = new String[typeAr.size()];
-				tableArr = tableAr.toArray(tableArr);
-				td = new TableDescriptor(typeArr, nameArr, aliasArr, tableArr);
-				//create table
-				table = new Table(td);
-				continue;
+		// assume first line is the labels
+		//String[] line = lines[0].split("\\s+");
+		String[] line = lines[0].split("\t");
+		for (int j = 0; j < line.length; j++) {
+			String[] column = line[0].split("\\s+");
+			nameAr.add(column[0]);
+			if (column[1].trim().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
+				typeAr.add(Type.TEXT);
+			} else if (column[1].trim().equals("("+DatabaseConnector.INT_TYPE_NAME+")")) {
+				typeAr.add(Type.INT);
+			} else {
+				throw new RuntimeException("Unsupported type!");
 			}
-			//second line is line ("---"), ignore
-			if (i == 1) {
-				continue;
-			}
+		}
+		for (int j = 0; j < typeAr.size(); j++) {
+			aliasAr.add(null);
+			tableAr.add(null);
+		}
+		//create table descriptor
+		Type[] typeArr = new Type[typeAr.size()];
+		typeArr = typeAr.toArray(typeArr);
+		String[] nameArr = new String[typeAr.size()];
+		nameArr = nameAr.toArray(nameArr);
+		String[] aliasArr = new String[typeAr.size()];
+		aliasArr = aliasAr.toArray(aliasArr);
+		String[] tableArr = new String[typeAr.size()];
+		tableArr = tableAr.toArray(tableArr);
+		td = new TableDescriptor(typeArr, nameArr, aliasArr, tableArr);
+		//create table
+		table = new Table(td);
+		
+		for (int i = 2; i < lines.length; i++) {
 			//third onwards are tuples
 			Tuple t = new Tuple(typeAr.size());
-			
-			String[] line = lines[i].split("\\s+");
+			//String[] line = lines[i].split("\\s+");
+			line = lines[0].split("\t");
 			for (int j = 0; j < line.length; j++) {
 				if (typeAr.get(j) == Type.INT) {
 					t.setField(j, new IntField(Integer.parseInt(line[j].trim())));
