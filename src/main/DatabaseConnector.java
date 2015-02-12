@@ -99,10 +99,10 @@ public class DatabaseConnector {
 			while (rs.next()) {
 				for (int i = 1; i <= columnCount; i++) {
 					if (rsmd.getColumnType(i) == Types.INTEGER) {
-						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s", rs.getInt(i)));
+						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s ", rs.getInt(i)));
 					} else {
 						//text
-						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s", rs.getString(i)));
+						buf.append(String.format("%-"+getColumnWidth(rsmd, i)+"s ", rs.getString(i)));
 					}
 				}
 				buf.append(System.lineSeparator());

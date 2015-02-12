@@ -87,4 +87,24 @@ public class UtilTest {
 		assertEquals(Type.INT, td.getFieldType(1));
 		db.executeUpdate("DROP TABLE num;");
 	}
+	
+	/**
+	 * Try parsing a column where the elements in the column are too wide
+	 */
+	@Test
+	public void parseWideColumn() {
+		DatabaseConnector db = DatabaseConnector.getInstance();
+		db.connect(DatabaseConnectorTest.DB, DatabaseConnectorTest.USER, DatabaseConnectorTest.PASSWORD);
+		db.executeUpdate("CREATE table num (name text, id int);");
+		db.executeUpdate("INSERT INTO num VALUES ('superrrrrrrrrlllllooooonnnnnnggggg', 1266067);");
+		Table t = Util.parseStringToTable(db.runSQL("SELECT * FROM num;"));
+		
+		TableDescriptor td = t.getTD();
+		assertEquals(1, t.size());
+		assertEquals("name", td.getFieldName(0));
+		assertEquals(Type.TEXT, td.getFieldType(0));
+		assertEquals("id", td.getFieldName(1));
+		assertEquals(Type.INT, td.getFieldType(1));
+		db.executeUpdate("DROP TABLE num;");
+	}
 }
