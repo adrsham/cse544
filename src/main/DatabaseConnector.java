@@ -115,6 +115,23 @@ public class DatabaseConnector {
 		return buf.toString();
 	}
 	
+	/**
+	 * Use this function for executing queries that have no result, such
+	 * as insert or update
+	 * 
+	 * @param query SQL query
+	 * @return num of affected rows
+	 */
+	public int executeUpdate(String query) {
+		try (PreparedStatement q = con.prepareStatement(query)) {
+			return q.executeUpdate();
+		} catch (SQLException e) {
+			LOG.log(Level.SEVERE, "Failed to execute query", e);
+			return -1;
+		}
+		
+	}
+	
 	private int getColumnWidth(ResultSetMetaData rsmd, int i) throws SQLException {
 			return rsmd.getColumnLabel(i).length() + rsmd.getColumnTypeName(i).length() + 5;
 	}
