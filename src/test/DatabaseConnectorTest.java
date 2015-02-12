@@ -25,7 +25,6 @@ public class DatabaseConnectorTest {
 		db.executeUpdate(INSERT);
 		//just make sure that the query executed, and we get some sort of result
 		assertTrue(db.runSQL("SELECT * FROM students;").contains("adrian"));
-		System.out.println(db.runSQL("SELECT * FROM students;"));
 		assertTrue(db.runSQL("SELECT * FROM students;").contains("1266067"));
 		db.executeUpdate("DROP TABLE students;");
 	}

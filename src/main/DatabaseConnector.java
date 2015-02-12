@@ -81,7 +81,7 @@ public class DatabaseConnector {
 			//store column names
 			for (int i = 1; i <= columnCount; i++) {
 				//print column
-				buf.append(String.format("%"+rsmd.getColumnLabel(i).length()+"s (%"+rsmd.getColumnTypeName(i).length()+"s)  ", 
+				buf.append(String.format("%"+rsmd.getColumnLabel(i).length()+"s (%"+rsmd.getColumnTypeName(i).length()+"s)   ", 
 						rsmd.getColumnLabel(i), rsmd.getColumnTypeName(i)));
 			}
 			buf.append(System.lineSeparator());
