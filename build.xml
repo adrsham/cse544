@@ -1,0 +1,122 @@
+<project name="Update DB" basedir="." default="dist" xmlns:jacoco="antlib:org.jacoco.ant" 
+xmlns:sonar="antlib:org.sonar.ant">
+  <description>
+    Build file for update DB
+  </description>
+
+  <property name="src" location="src"/>
+  <property name="bin" location="bin"/>
+  <property name="dist" location="dist"/>
+  <property name="lib" location="lib"/>
+  <property name="test" location="src"/>
+  <property name="javadoc" location="javadoc"/>
+  <property name="testreports" location="testreports"/>
+  
+  <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+    <classpath path="${lib}/jacocoant.jar"/>
+  </taskdef>
+
+  <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+    <classpath path="${lib}/sonar-ant-task-2.2.jar" />
+  </taskdef>
+  
+  <path id="classpath.base">
+    <pathelement location="${src}"/>
+  	<pathelement location="${lib}/postgresql-9.3-1102.jdbc41.jar"/>
+	<pathelement location="${lib}/jline-0.9.94.jar"/>
+	<pathelement location="${lib}/zql.jar"/>
+	<pathelement location="${lib}/junit-4.12.jar"/>
+    <pathelement location="${lib}/hamcrest-core-1.3.jar"/>
+  </path>
+
+  <target name="compile" depends="" description="compile source code">
+    <mkdir dir="${bin}"/>
+    <javac srcdir="${src}" 
+	   destdir="${bin}" 
+	   source="1.7" 
+	   target="1.7" 
+	   includeAntRuntime="no"
+	   debug="true">      
+      <classpath refid="classpath.base"/>
+      <compilerarg value="-Xlint"/>
+    </javac>
+  </target>
+  
+  <target name="clean"
+        description="clean up generated files" >
+    <delete dir="${bin}"/>
+    <delete dir="${dist}"/>
+    <delete dir="testreports"/>
+    <delete dir="${javadoc}"/>
+    <delete>
+      <fileset dir="." includes="*.db"/>
+    </delete>
+  </target>
+  
+  <target name="test" depends="compile" description="run all junit tests">
+    <mkdir dir="${testreports}"/>
+    <jacoco:coverage destfile="${testreports}/jacoco.exec">
+    <junit printsummary="yes" fork="true" forkmode="once">
+		<classpath refid="classpath.base" />
+      <formatter type="xml" usefile="true"/>
+      <classpath>
+        <pathelement location="${bin}"/>
+      </classpath>
+      
+      <batchtest fork="yes" todir="${testreports}">
+        <fileset dir="${test}" includes="**/*Test.java"/>
+      </batchtest>
+      <assertions><enable/></assertions>
+    </junit>
+    </jacoco:coverage>
+    
+    <jacoco:report>
+      <executiondata>
+        <file file="${testreports}/jacoco.exec"/>
+      </executiondata>
+      
+      <structure name="Note 2 Flash">
+        <classfiles>
+          <fileset dir="${bin}"/>
+        </classfiles>
+        <sourcefiles encoding="UTF-8">
+          <fileset dir="${src}"/>
+        </sourcefiles>        
+      </structure>
+      
+      <html destdir="${testreports}/coverageReport"/>
+    </jacoco:report>
+  </target>
+
+  <property name="sonar.jdbc.username" value="sonar"/>
+  <property name="sonar.jdbc.password" value="sonar"/>
+  <property name="sonar.jdbc.url" value="jdbc:mysql://localhost:3306/sonar?useUnicode=true&amp;characterEncoding=utf8"/>
+  <property name="sonar.projectKey" value="updateDB:updateDB" />
+  <property name="sonar.projectName" value="Update DB" />
+  <property name="sonar.projectVersion" value="1.0 Release" />
+  <property name="sonar.language" value="java" />
+  <property name="sonar.sources" value="${src}" />
+  <property name="sonar.binaries" value="bin/src/" />
+  <property name="sonar.tests" value="${test}" />
+  <property name="sonar.junit.reportsPath" value="${testreports}/" />
+  <property name="sonar.jacoco.reportPath" value="${testreports}/jacoco.exec" />
+  <property name="sonar.sourceEncoding" value="UTF-8" />
+
+  <target name="sonar" depends="test" description="execute sonar analysis">
+    <sonar:sonar />
+  </target>
+
+  <target name="dist" depends="clean, compile">
+    <mkdir dir="${dist}"/>
+    <jar jarfile="${dist}/UpdateDB.jar" basedir="${bin}">
+      <manifest>
+	<attribute name="Main-Class" value="main/LogicalPlanMain"/>
+	<attribute name="Class-Path" value="../lib/postgresql-9.3-1102.jdbc41.jar ../lib/zql.jar ../lib/jline-0.9.94.jar"/>
+    </manifest>
+    </jar>
+  </target>
+	
+  <target name="javadoc" description="Generate Javadoc">
+    <javadoc sourcepath="${src}" destdir="${javadoc}"/>
+  </target>
+</project>
