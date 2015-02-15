@@ -61,7 +61,7 @@ public class DatabaseConnector {
 			LOG.log(Level.SEVERE, "Failed to connect to db", e);
 		}
 	}
-	
+
 	public boolean connectionValid () {
 		return con != null;
 	}

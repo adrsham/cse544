@@ -7,6 +7,10 @@ import main.Util.*;
  * TableDescriptor describes the schema of a resulting Table object.
  */
 public class TableDescriptor {
+	
+	public static enum TableType {
+		DB_TABLE, QUERY_RESULTS;
+	}
 
 	/**
 	 * A help class to facilitate organizing the information of each field
@@ -16,28 +20,48 @@ public class TableDescriptor {
 		/**
 		 * The type of the field
 		 * */
-		public final Type fieldType;
+		public Type fieldType;
 
 		/**
-		 * The name of the field
+		 * The actual name of the field
 		 * */
-		public final String fieldName;
+		public String fieldName;
 		
 		/**
-		 * The name of the field
-		 * */
-		public final String fieldAlias;
-		
-		/**
-		 * The name of the field
-		 * */
-		public final String fieldTable;
+		 * the max length of this particular field in the table
+		 */
+		public int fieldMaxLength;
 
-		public TDItem(Type type, String n, String a, String t) {
-			this.fieldName = n;
-			this.fieldAlias = a;
-			this.fieldTable = t;
+		public TDItem(Type type, String name, int maxLength) {
 			this.fieldType = type;
+			this.fieldName = name;
+			this.fieldMaxLength = maxLength;
+		}
+
+		public String toString() {
+			StringBuffer buf = new StringBuffer();
+			buf.append(fieldName);
+			buf.append("(" + fieldType + ")");
+			return buf.toString();
+		}
+	}
+	
+	public static class TQDItem extends TDItem {
+
+		/**
+		 * The alias name of the field
+		 * */
+		public String fieldAlias;
+		
+		/**
+		 * The name of the table this field was from
+		 * */
+		public String fieldTable;
+
+		public TQDItem(Type type, String name, int maxLength, String aliasName, String tableName) {
+			super(type, name, maxLength);
+			this.fieldAlias = aliasName;
+			this.fieldTable = tableName;
 		}
 
 		public String toString() {
@@ -55,6 +79,7 @@ public class TableDescriptor {
 	}
 
 	private List<TDItem> descriptor;
+	public final TableType type;
 
 	/**
 	 * @return
@@ -68,6 +93,41 @@ public class TableDescriptor {
 		return null;
 	}
 
+	
+	/**
+	 * Create a new TupleDesc with typeAr.length fields with fields of the
+	 * specified types, with associated named fields.
+	 * 
+	 * @param tableType
+	 *            type of the table that is being created. If it is a query result then name array
+	 *            is actually alias name.
+	 * @param typeAr
+	 *            array specifying the number of and types of fields in this
+	 *            TupleDesc. It must contain at least one entry.
+	 * @param nameAr
+	 *            array specifying the names of the fields. Names can not be null
+	 *            
+	 * @param maxLengthAr
+	 *            array specifying the max lengths of the fields.
+	 */
+	public TableDescriptor(TableType tableType, List<Type> typeList, List<String> nameList, List<Integer> maxLengthList) {
+		if (typeList.size() != nameList.size() || typeList.size() != maxLengthList.size()) {
+			System.err.println("descriptor must have same amount of types as fileds");
+			throw new RuntimeException();
+		}
+		type = tableType;
+		descriptor = new ArrayList<TDItem>();
+		if (type == TableType.DB_TABLE) {
+			for (int i = 0; i < typeList.size(); i++) {
+				descriptor.add(new TDItem(typeList.get(i), nameList.get(i), maxLengthList.get(i)));
+			}
+		} else {
+			for (int i = 0; i < typeList.size(); i++) {
+				descriptor.add(new TQDItem(typeList.get(i), null, maxLengthList.get(i), nameList.get(i), null));
+			}
+		}
+	}
+	
 	/**
 	 * Create a new TupleDesc with typeAr.length fields with fields of the
 	 * specified types, with associated named fields.
@@ -79,14 +139,15 @@ public class TableDescriptor {
 	 *            array specifying the names of the fields. Note that names may
 	 *            be null.
 	 */
-	public TableDescriptor(Type[] typeAr, String[] nameAr, String[] aliasAr, String[] tableAr) {
-		if (typeAr.length != nameAr.length || typeAr.length != aliasAr.length || typeAr.length != tableAr.length) {
+	public TableDescriptor(List<Type> typeList, List<String> nameList, List<Integer> maxLengthList, List<String> aliasList, List<String> tableList) {
+		if (typeList.size() != nameList.size() || typeList.size() != maxLengthList.size() || typeList.size() != aliasList.size() || typeList.size() != tableList.size()) {
 			System.err.println("descriptor must have same amount of types as fileds");
 			throw new RuntimeException();
 		}
 		descriptor = new ArrayList<TDItem>();
-		for (int i = 0; i < typeAr.length; i++) {
-			descriptor.add(new TDItem(typeAr[i], nameAr[i], aliasAr[i], tableAr[i]));
+		type = TableType.QUERY_RESULTS;
+		for (int i = 0; i < typeList.size(); i++) {
+			descriptor.add(new TQDItem(typeList.get(i), nameList.get(i), maxLengthList.get(i), aliasList.get(i), tableList.get(i)));
 		}
 	}
 

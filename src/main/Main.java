@@ -2,6 +2,7 @@ package main;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -25,6 +26,7 @@ public class Main {
 			"UpdateDB Console ver 1.\nType \"h\" or \"help\" for help.\n";
 
 	private static DatabaseConnector con;
+	private static  Map<String, TableDescriptor> dbInfo;
 
 	public static void main(String[] argv) {
 		if (argv.length != 3) {
@@ -37,6 +39,7 @@ public class Main {
 			System.err.println(CONN_FAIL);
 			return;
 		}
+		dbInfo = Util.getDatabaseInfo(con);
 
 		Scanner reader = new Scanner(System.in);
 		System.out.println(INTRO);
