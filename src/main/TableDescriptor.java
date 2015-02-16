@@ -222,6 +222,7 @@ public class TableDescriptor {
 	 *            the Object to be compared for equality with this TupleDesc.
 	 * @return true if the object is equal to this TupleDesc.
 	 */
+	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof TableDescriptor)) {
 			return false;
@@ -237,6 +238,7 @@ public class TableDescriptor {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		int hash = 0;
 		for (int i = 0; i < descriptor.size(); i++) {
@@ -252,6 +254,7 @@ public class TableDescriptor {
 	 * 
 	 * @return String describing this descriptor.
 	 */
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 		buf.append(descriptor.get(0));
@@ -260,5 +263,14 @@ public class TableDescriptor {
 			buf.append( ", " + item);
 		}
 		return buf.toString();
+	}
+	
+	/**
+	 * Get the max length of the field, using fieldNameToIndex
+	 * @param name name of the field (original name)
+	 * @return max length of field
+	 */
+	public int getFieldLength(String name) {
+		return descriptor.get(fieldNameToIndex(name)).fieldMaxLength;
 	}
 }

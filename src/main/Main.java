@@ -89,7 +89,7 @@ public class Main {
 		processStatement(query);
 		System.out.println();
 
-		String results = con.runSQL(statement);
+		String results = con.runSQL(statement, dbInfo);
 		if (!fileLocation.equals("")) {
 			Util.writeToFile(fileLocation, results);
 		}

@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -87,11 +88,8 @@ public class DatabaseConnector {
 			}
 			buf.append(System.lineSeparator());
 			//store line
-			int colsWidth = 0;
-			for (int i = 1; i <= columnCount; i++) {
-				colsWidth += getColumnWidth(rsmd, i);
-			}
-			for (int i = 0; i < colsWidth; i++) {
+			
+			for (int i = 0; i < 10; i++) {
 				buf.append("-");
 			}
 			buf.append(System.lineSeparator());
@@ -119,6 +117,54 @@ public class DatabaseConnector {
 	}
 	
 	/**
+	 * Slightly modified version of runSQL that takes dbInfo to get the column widths
+	 * 
+	 * @param query SQL query
+	 * @param dbInfo database information
+	 * @return result string
+	 */
+	public String runSQL (String query, Map<String, TableDescriptor> dbInfo) {
+		StringBuilder buf = new StringBuilder();
+		try (PreparedStatement q = con.prepareStatement(query)) {
+			ResultSet rs = q.executeQuery();
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int columnCount = rsmd.getColumnCount();
+			//store column names
+			for (int i = 1; i <= columnCount; i++) {
+				//print column
+				buf.append(String.format("%-"+dbInfo.get(rsmd.getTableName(i)).getFieldLength(rsmd.getColumnName(i))+"s\t", 
+						rsmd.getColumnLabel(i) + " (" + rsmd.getColumnTypeName(i) + ")"));
+			}
+			buf.append(System.lineSeparator());
+			//store line
+			int colsWidth = 0;
+			for (int i = 1; i <= columnCount; i++) {
+				colsWidth += getColumnWidth(rsmd, i, dbInfo);
+			}
+			for (int i = 0; i < colsWidth + 7*(columnCount-1); i++) {
+				buf.append("-");
+			}
+			buf.append(System.lineSeparator());
+			//store tuples
+			
+			while (rs.next()) {
+				for (int i = 1; i <= columnCount; i++) {
+					if (rsmd.getColumnType(i) == Types.INTEGER) {
+						buf.append(String.format("%-" +dbInfo.get(rsmd.getTableName(i)).getFieldLength(rsmd.getColumnName(i))+"d\t", rs.getInt(i)));
+					} else {
+						//text
+						buf.append(String.format("%-" +dbInfo.get(rsmd.getTableName(i)).getFieldLength(rsmd.getColumnName(i))+"s\t", rs.getString(i)));
+					}
+				}
+				buf.append(System.lineSeparator());
+			}
+		} catch (SQLException e) {
+			LOG.log(Level.SEVERE, "Failed to execute query", e);
+		}
+		return buf.toString();
+	}
+	
+	/**
 	 * Use this function for executing queries that have no result, such
 	 * as insert or update
 	 * 
@@ -135,7 +181,16 @@ public class DatabaseConnector {
 		
 	}
 	
-	private int getColumnWidth(ResultSetMetaData rsmd, int i) throws SQLException {
-			return rsmd.getColumnLabel(i).length() + rsmd.getColumnTypeName(i).length() + 5;
+	/**
+	 * Calculate the width of the column
+	 * 
+	 * @param rsmd
+	 * @param i
+	 * @param dbInfo
+	 * @return value returned will be the max of the title and field lengths
+	 * @throws SQLException
+	 */
+	private int getColumnWidth(ResultSetMetaData rsmd, int i, Map<String, TableDescriptor> dbInfo) throws SQLException {
+			return Math.max(dbInfo.get(rsmd.getTableName(i)).getFieldLength(rsmd.getColumnName(i)), rsmd.getColumnLabel(i).length()+7);
 	}
 }
