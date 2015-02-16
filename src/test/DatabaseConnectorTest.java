@@ -12,7 +12,7 @@ public class DatabaseConnectorTest {
 	public static final String PASSWORD = "password";
 	/**Test database name*/
 	public static final String DB = "testdb";
-	
+	public static final String DROP_TABLE = "DROP TABLE IF EXISTS students;";
 	public static final String CREATE = "create table students ( name text, id text);";
 	public static final String INSERT = "insert into students values ('adrian', '1266067');";
 	
@@ -21,6 +21,7 @@ public class DatabaseConnectorTest {
 		DatabaseConnector db = DatabaseConnector.getInstance();
 		db.connect(DB, USER, PASSWORD);
 		assertTrue(db.connectionValid());
+		db.executeUpdate(DROP_TABLE);
 		db.executeUpdate(CREATE);
 		db.executeUpdate(INSERT);
 		//just make sure that the query executed, and we get some sort of result
@@ -34,6 +35,7 @@ public class DatabaseConnectorTest {
 		DatabaseConnector db = DatabaseConnector.getInstance();
 		db.connect(DB, USER, PASSWORD);
 		assertTrue(db.connectionValid());
+		db.executeUpdate("DROP TABLE IF EXISTS num;");
 		db.executeUpdate("CREATE TABLE num (name text, id int);");
 		db.executeUpdate("INSERT INTO num VALUES ('adrian', 1266067);");
 		//just make sure that the query executed, and we got some sort of result
