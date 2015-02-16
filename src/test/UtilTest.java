@@ -18,12 +18,12 @@ import org.junit.Test;
 
 public class UtilTest {
 
-	public static final String STRING_STRING_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+")  id ("+DatabaseConnector.STRING_TYPE_NAME+")  \n"+ 
+	public static final String STRING_STRING_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.STRING_TYPE_NAME+")  \n"+ 
 													 "------------------------\n"+ 
 													 "adrian       1266067    \n";
-	public static final String STRING_INT_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+")  id ("+DatabaseConnector.INT_TYPE_NAME+")  \n"+ 
+	public static final String STRING_INT_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.INT_TYPE_NAME+")  \n"+ 
 			 									  "------------------------\n"+ 
-			 									  "adrian       1266067    \n";
+			 									  "adrian \t 1266067    \n";
 
 	@Test
 	public void testReadWrite() {
@@ -62,9 +62,10 @@ public class UtilTest {
 		Table t = Util.parseStringToTable(STRING_INT_TABLE);
 		assertEquals(1, t.size());
 		TableDescriptor td = t.getTD();
-		assertEquals("name", td.getFieldName(0));
+		assertEquals(td.type, TableDescriptor.TableType.QUERY_RESULTS);
+		assertEquals("name", td.getAliasName(0) );
 		assertEquals(Type.TEXT, td.getFieldType(0));
-		assertEquals("id", td.getFieldName(1));
+		assertEquals("id", td.getAliasName(1));
 		assertEquals(Type.INT, td.getFieldType(1));
 	}
 	
@@ -75,6 +76,7 @@ public class UtilTest {
 	public void parseFromDB() {
 		DatabaseConnector db = DatabaseConnector.getInstance();
 		db.connect(DatabaseConnectorTest.DB, DatabaseConnectorTest.USER, DatabaseConnectorTest.PASSWORD);
+		db.executeUpdate("DROP TABLE IF EXISTS num;");
 		db.executeUpdate("CREATE table num (name text, id int);");
 		db.executeUpdate("INSERT INTO num VALUES ('adrian', 1266067);");
 		Table t = Util.parseStringToTable(db.runSQL("SELECT * FROM num;"));
@@ -95,6 +97,7 @@ public class UtilTest {
 	public void parseWideColumn() {
 		DatabaseConnector db = DatabaseConnector.getInstance();
 		db.connect(DatabaseConnectorTest.DB, DatabaseConnectorTest.USER, DatabaseConnectorTest.PASSWORD);
+		db.executeUpdate("DROP TABLE IF EXISTS num;");
 		db.executeUpdate("CREATE table num (name text, id int);");
 		db.executeUpdate("INSERT INTO num VALUES ('superrrrrrrrrlllllooooonnnnnnggggg', 1266067);");
 		Table t = Util.parseStringToTable(db.runSQL("SELECT * FROM num;"));
