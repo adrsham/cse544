@@ -212,6 +212,7 @@ public class Util {
 		for (int j = 0; j < line.length; j++) {
 			String[] column = line[j].split("\\s+");
 			nameAr.add(column[0]);
+			
 			if (column[1].trim().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
 				typeAr.add(Type.TEXT);
 			} else if (column[1].trim().equals("("+DatabaseConnector.INT_TYPE_NAME+")")) {
@@ -222,7 +223,11 @@ public class Util {
 		}
 
 		//create table descriptor
-		TableDescriptor td = new TableDescriptor(TableType.QUERY_RESULTS, typeAr, nameAr, new ArrayList<Integer>(typeAr.size()));
+		List <Integer> lengthList = new ArrayList<>();
+		for (int i = 0; i < typeAr.size(); i++) {
+			lengthList.add(0);
+		}
+		TableDescriptor td = new TableDescriptor(TableType.QUERY_RESULTS, typeAr, nameAr,lengthList);
 		return parseTDAndStringToTable(td, stringInput);
 	}
 	
@@ -236,7 +241,7 @@ public class Util {
 			//third onwards are tuples
 			Tuple t = new Tuple(td.numFields());
 			//String[] line = lines[i].split("\\s+");
-			String[] line = lines[0].split("\t");
+			String[] line = lines[i].split("\t");
 			for (int j = 0; j < line.length; j++) {
 				if (td.getFieldType(j) == Type.INT) {
 					t.setField(j, new IntField(Integer.parseInt(line[j].trim())));
