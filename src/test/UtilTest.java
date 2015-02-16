@@ -106,9 +106,9 @@ public class UtilTest {
 		
 		TableDescriptor td = t.getTD();
 		assertEquals(1, t.size());
-		assertEquals("name", td.getFieldName(0));
+		assertEquals("name", td.getAliasName(0));
 		assertEquals(Type.TEXT, td.getFieldType(0));
-		assertEquals("id", td.getFieldName(1));
+		assertEquals("id", td.getAliasName(1));
 		assertEquals(Type.INT, td.getFieldType(1));
 		db.executeUpdate("DROP TABLE num;");
 	}
