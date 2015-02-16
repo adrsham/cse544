@@ -64,7 +64,7 @@ public class UtilTest {
 		assertEquals(1, t.size());
 		TableDescriptor td = t.getTD();
 		assertEquals(td.type, TableDescriptor.TableType.QUERY_RESULTS);
-		assertEquals("name", td.getAliasName(0) );
+		assertEquals("name", td.getAliasName(0));
 		assertEquals(Type.TEXT, td.getFieldType(0));
 		assertEquals("id", td.getAliasName(1));
 		assertEquals(Type.INT, td.getFieldType(1));
@@ -83,10 +83,11 @@ public class UtilTest {
 		Table t = Util.parseStringToTable(db.runSQL("SELECT * FROM num;"));
 		
 		TableDescriptor td = t.getTD();
+        assertEquals(td.type, TableDescriptor.TableType.QUERY_RESULTS);
 		assertEquals(1, t.size());
-		assertEquals("name", td.getFieldName(0));
+		  assertEquals("name", td.getAliasName(0));
 		assertEquals(Type.TEXT, td.getFieldType(0));
-		assertEquals("id", td.getFieldName(1));
+        assertEquals("id", td.getAliasName(1));
 		assertEquals(Type.INT, td.getFieldType(1));
 		db.executeUpdate("DROP TABLE num;");
 	}
