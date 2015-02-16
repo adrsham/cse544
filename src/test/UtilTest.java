@@ -18,12 +18,13 @@ import org.junit.Test;
 
 public class UtilTest {
 
-	public static final String STRING_STRING_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.STRING_TYPE_NAME+")  \n"+ 
-													 "------------------------\n"+ 
-													 "adrian       1266067    \n";
-	public static final String STRING_INT_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.INT_TYPE_NAME+")  \n"+ 
-			 									  "------------------------\n"+ 
-			 									  "adrian \t 1266067    \n";
+    public static final String LS = System.lineSeparator();
+	public static final String STRING_STRING_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.STRING_TYPE_NAME+")  " + LS + 
+													 "------------------------" + LS + 
+													 "adrian       1266067    " + LS;
+	public static final String STRING_INT_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.INT_TYPE_NAME+")  " + LS + 
+			 									  "------------------------" + LS + 
+			 									  "adrian \t 1266067    " + LS;
 
 	@Test
 	public void testReadWrite() {
