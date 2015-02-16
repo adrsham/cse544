@@ -112,6 +112,8 @@ public class TableDescriptor {
 	 */
 	public TableDescriptor(TableType tableType, List<Type> typeList, List<String> nameList, List<Integer> maxLengthList) {
 		if (typeList.size() != nameList.size() || typeList.size() != maxLengthList.size()) {
+			System.err.printf("Type size %d, name size %d\n", typeList.size(), nameList.size());
+			System.err.printf("LengthList size %d, type size %d\n", maxLengthList.size(), typeList.size());
 			System.err.println("descriptor must have same amount of types as fileds");
 			throw new RuntimeException();
 		}
@@ -173,6 +175,26 @@ public class TableDescriptor {
 		}
 		return descriptor.get(i).fieldName;
 	}
+	
+	/**
+	 * Gets the (possibly null) field name of the ith field of this TupleDesc.
+	 * 
+	 * @param i
+	 *            index of the alias name to return. It must be a valid index.
+	 * @return the name of the ith field
+	 * @throws NoSuchElementException
+	 *             if i is not a valid field reference.
+	 */
+	public String getAliasName(int i) throws NoSuchElementException {
+		if (type == TableType.DB_TABLE) {
+			return null;
+		}
+		if (i < 0 || i > descriptor.size() - 1) {
+			throw new NoSuchElementException();
+		}
+		return ((TQDItem)descriptor.get(i)).fieldAlias;
+	}
+	
 
 	/**
 	 * Gets the type of the ith field of this TupleDesc.
