@@ -21,7 +21,7 @@ public class UtilTest {
     public static final String LS = System.lineSeparator();
 	public static final String STRING_STRING_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.STRING_TYPE_NAME+")  " + LS + 
 													 "------------------------" + LS + 
-													 "adrian       1266067    " + LS;
+													 "adrian \t 1266067    " + LS;
 	public static final String STRING_INT_TABLE = "name ("+DatabaseConnector.STRING_TYPE_NAME+") \tid ("+DatabaseConnector.INT_TYPE_NAME+")  " + LS + 
 			 									  "------------------------" + LS + 
 			 									  "adrian \t 1266067    " + LS;
@@ -49,9 +49,9 @@ public class UtilTest {
 		Table t = Util.parseStringToTable(STRING_STRING_TABLE);
 		assertEquals(1, t.size());
 		TableDescriptor td = t.getTD();
-		assertEquals("name", td.getFieldName(0));
+		assertEquals("name", td.getAliasName(0));
 		assertEquals(Type.TEXT, td.getFieldType(0));
-		assertEquals("id", td.getFieldName(1));
+		assertEquals("id", td.getAliasName(1));
 		assertEquals(Type.TEXT, td.getFieldType(1));
 	}
 
