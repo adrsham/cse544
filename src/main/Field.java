@@ -19,7 +19,7 @@ public interface Field {
      * @return type of this field
      */
     public Util.Type getType();
-    
+
     /**
      * Hash code.
      * Different Field objects representing the same value should probably

@@ -7,8 +7,8 @@ import main.Util.*;
  * Instance of Field that stores a single integer.
  */
 public class IntField implements Field {
-	
-	private final int value;
+
+    private final int value;
 
     public int getValue() {
         return value;
@@ -32,6 +32,8 @@ public class IntField implements Field {
     }
 
     public boolean equals(Object field) {
+        if (!(field instanceof IntField))
+            return false;
         return ((IntField) field).value == value;
     }
 
@@ -61,7 +63,7 @@ public class IntField implements Field {
         case LESS_THAN_OR_EQ:
             return value <= iVal.value;
         case LIKE:
-        	return value == iVal.value;
+            return value == iVal.value;
         }
 
         return false;
@@ -71,7 +73,7 @@ public class IntField implements Field {
      * Return the Type of this field.
      * @return Type.INT_TYPE
      */
-	public Type getType() {
-		return Type.INT;
-	}
+    public Type getType() {
+        return Type.INT;
+    }
 }
