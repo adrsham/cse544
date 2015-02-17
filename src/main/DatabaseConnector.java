@@ -26,7 +26,7 @@ public class DatabaseConnector {
 	private Connection con = null;
 	
 	/*Integer type name*/
-	public static final String INT_TYPE_NAME = "int4";
+	public static final String INT_TYPE_NAME = "int";
 	/*Text type name*/
 	public static final String STRING_TYPE_NAME = "text";
 	
@@ -58,6 +58,7 @@ public class DatabaseConnector {
 		try {
 			con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + dbName, 
 					userName, password);
+			db = this;
 		} catch (SQLException e) {
 			LOG.log(Level.SEVERE, "Failed to connect to db", e);
 		}

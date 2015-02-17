@@ -39,7 +39,7 @@ public class Main {
 			System.err.println(CONN_FAIL);
 			return;
 		}
-		dbInfo = Util.getDatabaseInfo(con);
+		dbInfo = Util.getDatabaseInfo();
 
 		Scanner reader = new Scanner(System.in);
 		System.out.println(INTRO);
@@ -106,7 +106,8 @@ public class Main {
 		String fileLocation = reader.nextLine();
 		
 		String statementResults = con.runSQL(statement);
-		Table original = Util.parseStringToTable(statementResults);
+		ZQuery query = getQuery(statement);
+		Table original = Util.parseStringAndQueryToTable(query, statementResults);
 		String fileResults = Util.readFromFile(file);
 		Table modified = Util.parseStringToTable(fileResults);
 

@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import main.TableDescriptor.TDItem;
-import main.TableDescriptor.TableType;
+import main.TableDescriptor.TQDItem;
 import Zql.ZFromItem;
 import Zql.ZQuery;
 import Zql.ZSelectItem;
@@ -32,6 +32,7 @@ public class Util {
 
 	public static final String GET_TABLE_SQL = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';";
 	public static final String GET_COLUMN_INFO_SQL = "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '%s';";
+    public static final String GET_COLUMN_DATA_SQL = "SELECT %s FROM %s;";
 	public static final String GET_MAX_LENGTH_TEXT_SQL = "SELECT MAX(LENGTH(%s)) FROM %s;";
 	public static final String GET_MAX_INT_SQL = "SELECT MAX(%s) FROM %s;";
 	public static final String GET_MIN_INT_SQL = "SELECT MIN(%s) FROM %s;";
@@ -79,9 +80,10 @@ public class Util {
 	 * all internal so the queries and such should return back the correct sizes and lengths.
 	 * @return
 	 */
-	public static Map<String, TableDescriptor> getDatabaseInfo(DatabaseConnector con) {
+	public static Map<String, TableDescriptor> getDatabaseInfo() {
 
 		dbInfo = new HashMap<String, TableDescriptor>();
+		DatabaseConnector con = DatabaseConnector.getInstance();
 		String[] tables = con.runSQL(GET_TABLE_SQL).split(System.lineSeparator());
 		for (int i = 2; i < tables.length; i++) {
 			String tableName = tables[i].trim();
@@ -108,7 +110,7 @@ public class Util {
 					maxLength.add(Math.max(resMax[2].trim().length(), resMin[2].trim().length()));
 				}
 			}
-			dbInfo.put(tableName, new TableDescriptor(TableType.DB_TABLE, type, name, maxLength));
+			dbInfo.put(tableName, new TableDescriptor(type, name, maxLength));
 		}
 
 		return dbInfo;
@@ -131,7 +133,7 @@ public class Util {
 	 * parses string and query into a table object of type query results
 	 */
 	@SuppressWarnings("unchecked")
-	public static Table parseStringAndSelectListToTable(ZQuery query, String stringInput) {
+	public static Table parseStringAndQueryToTable(ZQuery query, String stringInput) {
 		List<String> name = new ArrayList<String>();
 		List<String> alias = new ArrayList<String>();
 		List<String> table = new ArrayList<String>();
@@ -142,8 +144,8 @@ public class Util {
 		Vector<ZSelectItem> selectList = query.getSelect();
 		for (int i = 0; i < selectList.size(); i++) {
 			ZSelectItem si = selectList.elementAt(i);
+			Vector<ZFromItem> from = query.getFrom();
 			if (si.getColumn().equals("*")) {
-				Vector<ZFromItem> from = query.getFrom();
 				if (si.getTable() == null) {
 					// star everything. must add all col from from list.
 					for (int j = 0; j < from.size(); j++) {
@@ -160,7 +162,7 @@ public class Util {
 					}
 				} else {
 					for (int j = 0; j < from.size(); j++) {
-						if (si.getTable().equals(from.elementAt(j).getAlias())) {
+						if (si.getTable().equals(from.elementAt(j).getAlias()) || si.getTable().equals(from.elementAt(j).getTable())) {
 							String curTable = from.elementAt(j).getTable();
 							Iterator<TDItem> iter = dbInfo.get(curTable).iterator();
 							while (iter.hasNext()) {
@@ -179,17 +181,41 @@ public class Util {
 				String[] column = line[curCol].split("\\s+");
 				name.add(si.getColumn());
 				alias.add(si.getAlias());
-				table.add(si.getTable());
-				if (column[1].trim().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
+				if (si.getTable() == null) {
+				    // find the table that it belongs to
+				    for (int j = 0; j < from.size(); j++) {
+				        String currentTable = from.elementAt(j).getTable();
+				        TableDescriptor td = dbInfo.get(currentTable);
+				        for (int k = 0; k < td.numFields(); k++) {
+				            if (si.getColumn().equals(td.getFieldName(k))) {
+				                table.add(currentTable);
+				                break;
+				            }
+				        }
+				        if (table.size() == name.size()) {
+				            // already added the table name
+				            break;
+				        }
+				    }
+				} else {
+				    for (int j = 0; j < from.size(); j++) {
+                        ZFromItem item = from.elementAt(j);
+                        if (si.getTable().equals(item.getTable()) || si.getTable().equals(item.getAlias())) {
+                            table.add(item.getTable());
+                            break;
+                        }
+				    }
+				}
+				if (column[1].trim().toLowerCase().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
 					type.add(Type.TEXT);
-				} else if (column[1].trim().equals("("+DatabaseConnector.INT_TYPE_NAME+")")) {
+				} else if (column[1].trim().toLowerCase().startsWith("("+DatabaseConnector.INT_TYPE_NAME)) {
 					type.add(Type.INT);
 				} else {
 					throw new RuntimeException("Unsupported type!");
 				}
 			}
 		}
-		TableDescriptor td = new TableDescriptor(type, name, new ArrayList<Integer>(type.size()), alias, table);
+		TableDescriptor td = new TableDescriptor(type, name, alias, table);
 		return parseTDAndStringToTable(td, stringInput);
 	}
 
@@ -213,9 +239,9 @@ public class Util {
 			String[] column = line[j].split("\\s+");
 			nameAr.add(column[0]);
 			
-			if (column[1].trim().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
+			if (column[1].trim().toLowerCase().equals("("+DatabaseConnector.STRING_TYPE_NAME+")")) {
 				typeAr.add(Type.TEXT);
-			} else if (column[1].trim().equals("("+DatabaseConnector.INT_TYPE_NAME+")")) {
+			} else if (column[1].trim().toLowerCase().startsWith("("+DatabaseConnector.INT_TYPE_NAME)) {
 				typeAr.add(Type.INT);
 			} else {
 				throw new RuntimeException("Unsupported type!");
@@ -223,11 +249,7 @@ public class Util {
 		}
 
 		//create table descriptor
-		List <Integer> lengthList = new ArrayList<>();
-		for (int i = 0; i < typeAr.size(); i++) {
-			lengthList.add(0);
-		}
-		TableDescriptor td = new TableDescriptor(TableType.QUERY_RESULTS, typeAr, nameAr,lengthList);
+		TableDescriptor td = new TableDescriptor(typeAr, nameAr);
 		return parseTDAndStringToTable(td, stringInput);
 	}
 	
@@ -300,4 +322,42 @@ public class Util {
 
 		return buf.toString();
 	}
+
+
+    /**
+     * Modifies the table so that the table descriptor is correct with name, alias, and table of each column set correctly.
+     * @param table
+     */
+    public static void findRealTableDescriptor(Table table) {
+        DatabaseConnector con = DatabaseConnector.getInstance();
+        List<List<Field>> fields = table.getColOfFields();
+        TableDescriptor td = table.getTD();
+        for (int i = 0; i < td.numFields(); i++) {
+            boolean found = false;
+            // loop through each num field and find out what the column info actually is.
+            for (String tableName : dbInfo.keySet()) {
+                TableDescriptor curTD = dbInfo.get(tableName);
+                for (int j = 0; j < curTD.numFields(); j++) {
+                    String colName = curTD.getFieldName(j);
+                    Table curTable = parseStringToTable(con.runSQL(String.format(GET_COLUMN_DATA_SQL, colName, tableName)));
+                    List<Field> curFields = curTable.getColOfFields().get(0);
+                    if (curFields.containsAll(fields.get(i)) && td.getFieldType(i) == curTD.getFieldType(j)) {
+                        // the fields of the table passed in was contained inside the full list.
+                        TQDItem item = (TQDItem) td.getFieldInfo(i);
+                        item.fieldName = colName;
+                        if (item.fieldName.equals(item.fieldAlias)) {
+                            item.fieldAlias = null;
+                        }
+                        item.fieldTable = tableName;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+        }
+        System.out.println(fields);
+    }
 }

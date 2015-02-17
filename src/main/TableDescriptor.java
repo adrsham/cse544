@@ -58,8 +58,8 @@ public class TableDescriptor {
 		 * */
 		public String fieldTable;
 
-		public TQDItem(Type type, String name, int maxLength, String aliasName, String tableName) {
-			super(type, name, maxLength);
+		public TQDItem(Type type, String name, String aliasName, String tableName) {
+			super(type, name, 0);
 			this.fieldAlias = aliasName;
 			this.fieldTable = tableName;
 		}
@@ -93,63 +93,83 @@ public class TableDescriptor {
 		return null;
 	}
 
-	
 	/**
-	 * Create a new TupleDesc with typeAr.length fields with fields of the
+	 * Create a new TupleDesc with typeList.size() fields with fields of the
 	 * specified types, with associated named fields.
 	 * 
-	 * @param tableType
-	 *            type of the table that is being created. If it is a query result then name array
-	 *            is actually alias name.
-	 * @param typeAr
-	 *            array specifying the number of and types of fields in this
+	 * @param typeList
+	 *            list specifying the number of and types of fields in this
 	 *            TupleDesc. It must contain at least one entry.
-	 * @param nameAr
-	 *            array specifying the names of the fields. Names can not be null
+	 * @param nameList
+	 *            list specifying the names of the fields. Names can not be null
 	 *            
-	 * @param maxLengthAr
-	 *            array specifying the max lengths of the fields.
+	 * @param maxLengthList
+	 *            list specifying the max lengths of the fields.
 	 */
-	public TableDescriptor(TableType tableType, List<Type> typeList, List<String> nameList, List<Integer> maxLengthList) {
+	public TableDescriptor(List<Type> typeList, List<String> nameList, List<Integer> maxLengthList) {
 		if (typeList.size() != nameList.size() || typeList.size() != maxLengthList.size()) {
 			System.err.printf("Type size %d, name size %d\n", typeList.size(), nameList.size());
 			System.err.printf("LengthList size %d, type size %d\n", maxLengthList.size(), typeList.size());
 			System.err.println("descriptor must have same amount of types as fileds");
 			throw new RuntimeException();
 		}
-		type = tableType;
+		type = TableType.DB_TABLE;
 		descriptor = new ArrayList<TDItem>();
-		if (type == TableType.DB_TABLE) {
-			for (int i = 0; i < typeList.size(); i++) {
-				descriptor.add(new TDItem(typeList.get(i), nameList.get(i), maxLengthList.get(i)));
-			}
-		} else {
-			for (int i = 0; i < typeList.size(); i++) {
-				descriptor.add(new TQDItem(typeList.get(i), null, maxLengthList.get(i), nameList.get(i), null));
-			}
+		for (int i = 0; i < typeList.size(); i++) {
+			descriptor.add(new TDItem(typeList.get(i), nameList.get(i), maxLengthList.get(i)));
 		}
 	}
-	
+
 	/**
-	 * Create a new TupleDesc with typeAr.length fields with fields of the
-	 * specified types, with associated named fields.
-	 * 
-	 * @param typeAr
-	 *            array specifying the number of and types of fields in this
-	 *            TupleDesc. It must contain at least one entry.
-	 * @param fieldAr
-	 *            array specifying the names of the fields. Note that names may
-	 *            be null.
+     * Create a new TupleDesc with typeList.size() fields with fields of the
+     * specified types, with associated named fields. By not passing in a max length, this td
+     * is assumed to be a query result
+     * 
+     * @param typeList
+     *            list specifying the number of and types of fields in this
+     *            TupleDesc. It must contain at least one entry.
+     * @param nameList
+     *            list specifying the names of the fields. Names can not be null
+     */
+    public TableDescriptor(List<Type> typeList, List<String> nameList) {
+        // type query result
+        if (typeList.size() != nameList.size()) {
+            System.err.printf("Type size %d, name size %d\n", typeList.size(), nameList.size());
+            System.err.println("descriptor must have same amount of types as fileds");
+            throw new RuntimeException();
+        }
+        type = TableType.QUERY_RESULTS;
+        descriptor = new ArrayList<TDItem>();
+        for (int i = 0; i < typeList.size(); i++) {
+            descriptor.add(new TQDItem(typeList.get(i), null, nameList.get(i), null));
+        }
+    }
+
+	/**
+	 * Create a new TupleDesc with typeList.size() fields with fields of the
+     * specified types, with associated named fields. By not passing in a max length, this td
+     * is assumed to be a query result
+     * 
+     * @param typeList
+     *            list specifying the number of and types of fields in this
+     *            TupleDesc. It must contain at least one entry.
+     * @param nameList
+     *            list specifying the names of the fields.
+     * @param aliasList
+     *            list specifying the alias of the fields.
+     * @param tableList
+     *            list specifying the table of the fields.
 	 */
-	public TableDescriptor(List<Type> typeList, List<String> nameList, List<Integer> maxLengthList, List<String> aliasList, List<String> tableList) {
-		if (typeList.size() != nameList.size() || typeList.size() != maxLengthList.size() || typeList.size() != aliasList.size() || typeList.size() != tableList.size()) {
+	public TableDescriptor(List<Type> typeList, List<String> nameList, List<String> aliasList, List<String> tableList) {
+	    // type query result
+		if (typeList.size() != nameList.size() || typeList.size() != aliasList.size() || typeList.size() != tableList.size()) {
 			System.err.println("descriptor must have same amount of types as fileds");
 			throw new RuntimeException();
 		}
 		descriptor = new ArrayList<TDItem>();
 		type = TableType.QUERY_RESULTS;
 		for (int i = 0; i < typeList.size(); i++) {
-			descriptor.add(new TQDItem(typeList.get(i), nameList.get(i), maxLengthList.get(i), aliasList.get(i), tableList.get(i)));
+			descriptor.add(new TQDItem(typeList.get(i), nameList.get(i), aliasList.get(i), tableList.get(i)));
 		}
 	}
 
@@ -211,6 +231,13 @@ public class TableDescriptor {
 			throw new NoSuchElementException();
 		}
 		return descriptor.get(i).fieldType;
+	}
+	
+	public TDItem getFieldInfo(int i) throws NoSuchElementException {
+	       if (i < 0 || i > descriptor.size() - 1) {
+	            throw new NoSuchElementException();
+	        }
+	        return descriptor.get(i);
 	}
 
 	/**
