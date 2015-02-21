@@ -18,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import main.TableDescriptor.TDItem;
-import main.TableDescriptor.TQDItem;
 import Zql.ZFromItem;
 import Zql.ZQuery;
 import Zql.ZSelectItem;
@@ -332,43 +331,5 @@ public class Util {
         }
 
         return buf.toString();
-    }
-
-
-    /**
-     * Modifies the table so that the table descriptor is correct with name, alias, and table of each column set correctly.
-     * @param table
-     */
-    public static void findRealTableDescriptor(Table table) {
-        DatabaseConnector con = DatabaseConnector.getInstance();
-        List<List<Field>> fields = table.getColOfFields();
-        TableDescriptor td = table.getTD();
-        for (int i = 0; i < td.numFields(); i++) {
-            boolean found = false;
-            // loop through each num field and find out what the column info actually is.
-            for (String tableName : dbInfo.keySet()) {
-                TableDescriptor curTD = dbInfo.get(tableName);
-                for (int j = 0; j < curTD.numFields(); j++) {
-                    String colName = curTD.getFieldName(j);
-                    Table curTable = parseStringToTable(con.runSQL(String.format(GET_COLUMN_DATA_SQL, colName, tableName)));
-                    List<Field> curFields = curTable.getColOfFields().get(0);
-                    if (curFields.containsAll(fields.get(i)) && td.getFieldType(i) == curTD.getFieldType(j)) {
-                        // the fields of the table passed in was contained inside the full list.
-                        TQDItem item = (TQDItem) td.getFieldInfo(i);
-                        item.fieldName = colName;
-                        if (item.fieldName.equals(item.fieldAlias)) {
-                            item.fieldAlias = null;
-                        }
-                        item.fieldTable = tableName;
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) {
-                    break;
-                }
-            }
-        }
-        System.out.println(fields);
     }
 }

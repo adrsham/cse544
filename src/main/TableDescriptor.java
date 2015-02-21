@@ -164,6 +164,7 @@ public class TableDescriptor {
         // type query result
         if (typeList.size() != nameList.size() || typeList.size() != aliasList.size() || typeList.size() != tableList.size()) {
             System.err.println("descriptor must have same amount of types as fileds");
+            System.err.println(typeList.size() + " " + nameList.size() + " " + aliasList.size() + " " + tableList.size());
             throw new RuntimeException();
         }
         descriptor = new ArrayList<TDItem>();
