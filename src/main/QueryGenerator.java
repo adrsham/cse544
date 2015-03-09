@@ -1,29 +1,223 @@
 package main;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import main.TableDescriptor.TQDItem;
+import Zql.ZConstant;
+import Zql.ZExp;
+import Zql.ZExpression;
 import Zql.ZFromItem;
 import Zql.ZQuery;
 import Zql.ZSelectItem;
 
 public class QueryGenerator {
+    private static DatabaseConnector con;
 
-
-    /*private QueryGenerator() {
-		//static class
-	}*/
-
-    public static String generate(ZQuery originalQuery, Table original, Table modified) {       
+    public static String generate(ZQuery originalQuery, Table original, Table modified) {
+        con = DatabaseConnector.getInstance();
         ZQuery modifiedQuery = new ZQuery();
         modifiedQuery.addSelect(getModifiedSelectList(originalQuery, original, modified));
         modifiedQuery.addFrom(originalQuery.getFrom());
-
-        //findRealTableDescriptor(originalQuery, original, modified);
+        getModifiedWhereExpressions(originalQuery, modifiedQuery, modified);
         return modifiedQuery.toString();
     }
+    
+    public static void getModifiedWhereExpressions(ZQuery originalQuery, ZQuery curModifiedQuery, Table modified) {
+        if (originalQuery.getWhere() == null ) {
+            return;
+        } else if (!(originalQuery.getWhere() instanceof ZExpression)) {
+            System.err.println("Nested queries are currently unsupported.");
+            System.err.println(originalQuery.getWhere());
+            return;
+        }
+        
+        ZExpression whereClause = (ZExpression) originalQuery.getWhere();
+        // TODO currently going to assume that there is no alias going on. must fix this.
+        curModifiedQuery.addWhere(whereClause);
+        String res = con.runSQL(curModifiedQuery.toString());
+        //System.out.println(res);
+        // table with same where as original sql but same projections as modified table from file.
+        Table curOriginal = Util.parseStringToTable(res);
+        if (curOriginal.equals(modified)) {
+            // correct, just return here
+            return;
+        }
+        Set<ZExpression> exp = getWhereClauses(whereClause);
+        if (curOriginal.contains(modified)) {
+            // the original is less restricting then the new table provided. that means new where clauses need to be added
+            // how do we do this?
+            
+        } else if (modified.contains(curOriginal)) {
+            if (!recursiveRemoveWhere(new HashSet<ZExpression[]>(), exp, curModifiedQuery, modified)) {
+                System.err.println("System was not able to find matching SQL statement.");
+            }
+        } else {
+            // still trying to figure this part out
+        }
+        return;
+    }
+    
+    private static boolean recursiveRemoveWhere(Set<ZExpression[]> tried, Set<ZExpression> cur, ZQuery curModQuery, Table modified) {
+        if (tried.contains(cur)) {
+            return false;
+        } else {
+            ZExpression[] expArray = new ZExpression[cur.size()];
+            expArray = cur.toArray(expArray);
+            tried.add(expArray);
+            for (int i = 0; i < expArray.length; i++) {
+                cur.remove(expArray[i]);
+                // check to see if it is right or if it needs more removing.
+                curModQuery.addWhere(convertSetToOneExp(cur));
+                String res = con.runSQL(curModQuery.toString());
+                Table curMod = Util.parseStringToTable(res);
+                if (modified.equals(curMod)) {
+                    return true;
+                } else if (modified.contains(curMod) && recursiveRemoveWhere(tried, cur, curModQuery, modified)) {
+                    // current check is still contained in modified, need to get rid of more where clauses
+                    return true;
+                }
+                cur.add(expArray[i]);
+            }
+            return false;
+        }
+    }
+    
+    private static ZExp convertSetToOneExp(Set<ZExpression> set) {
+        if (set.size() == 0) {
+            return null;
+        } else if (set.size() == 1) {
+            return set.iterator().next();
+        } else {
+            ZExpression newExp = new ZExpression("AND");
+            for (ZExpression exp : set) {
+                newExp.addOperand(exp);
+            }
+            return newExp;
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static Set<ZExpression> getWhereClauses(ZExpression wc) {
+        Set<ZExpression> res = new HashSet<ZExpression>();
+        if (wc.getOperator().equals("AND")) {
+            for (int i = 0; i < wc.nbOperands(); i++) {
+                if (!(wc.getOperand(i) instanceof ZExpression)) {
+                    System.err.println("Nested queries are currently unsupported.");
+                    return null;
+                }
+                ZExpression cur = (ZExpression) wc.getOperand(i);
+                Vector<ZExp> ops = cur.getOperands();
+                if (ops.size() != 2) {
+                    System.err.println("Only simple binary expresssions of the form A op B are currently supported.");
+                    return null;
+                }
+                if (!(ops.elementAt(0) instanceof ZConstant && ops.elementAt(1) instanceof ZConstant)) {
+                    System.err.println("Joins are currently not supported.");
+                    return null;
+                }
+                ZConstant elm0 = (ZConstant) ops.elementAt(0);
+                ZConstant elm1 = (ZConstant) ops.elementAt(1);
+                if (elm0.getType() == ZConstant.COLUMNNAME && elm1.getType() != ZConstant.COLUMNNAME) {
+                    res.add(new ZExpression(cur.getOperator(), elm0, elm1));
+                } else if (elm1.getType() == ZConstant.COLUMNNAME && elm0.getType() != ZConstant.COLUMNNAME) {
+                    res.add(new ZExpression(cur.getOperator(), elm1, elm0));
+                } else {
+                    System.err.println("Joins are currently not supported.");
+                    return null;
+                }
+            }
+        } else if (wc.getOperator().equals("OR")) {
+            System.err.println("OR in where clauses are currently unsupported.");
+            return null;
+        } else {
+            Vector<ZExp> ops = wc.getOperands();
+            if (ops.size() != 2) {
+                System.err.println("Only simple binary expresssions of the form A op B are currently supported.");
+                return null;
+            }
+            if (!(ops.elementAt(0) instanceof ZConstant && ops.elementAt(1) instanceof ZConstant)) {
+                System.err.println("Joins are currently not supported.");
+                return null;
+            }
+            ZConstant elm0 = (ZConstant) ops.elementAt(0);
+            ZConstant elm1 = (ZConstant) ops.elementAt(1);
+            if (elm0.getType() == ZConstant.COLUMNNAME && elm1.getType() != ZConstant.COLUMNNAME) {
+                res.add(new ZExpression(wc.getOperator(), elm0, elm1));
+            } else if (elm1.getType() == ZConstant.COLUMNNAME && elm0.getType() != ZConstant.COLUMNNAME) {
+                res.add(new ZExpression(wc.getOperator(), elm1, elm0));
+            } else {
+                System.err.println("Joins are currently not supported.");
+                return null;
+            }
+        }
+        return res;
+    }
+/*
+    public static ZExp getModifiedWhereList(ZQuery originalQuery, Table original, Table modified) {
 
+        if (wx.getOperator().equals("AND")) {
+            String exp = "";
+            System.out.println("number of operands:" + wx.nbOperands());
+            for (int i = 0; i < wx.nbOperands(); i++) {
+                if (!(wx.getOperand(i) instanceof ZExpression)) {
+                    System.err.println("Nested queries are currently unsupported.");
+                    return null;
+                }
+                ZExpression newWx = (ZExpression) wx.getOperand(i);
+                Vector<ZExp> ops = newWx.getOperands();
+                if (ops.size() != 2) {
+                    System.err.println("Only simple binary expresssions of the form A op B are currently supported.");
+                    return null;
+                }
+
+                boolean isJoin = false;
+                boolean op1const = ops.elementAt(0) instanceof ZConstant; // otherwise
+                // is a Query
+                boolean op2const = ops.elementAt(1) instanceof ZConstant; // otherwise
+                // is a Query
+                if (op1const && op2const) {
+                    isJoin = ((ZConstant) ops.elementAt(0)).getType() == ZConstant.COLUMNNAME
+                            && ((ZConstant) ops.elementAt(1)).getType() == ZConstant.COLUMNNAME;
+                } else if (ops.elementAt(0) instanceof ZQuery
+                        || ops.elementAt(1) instanceof ZQuery) {
+                    isJoin = true;
+                    // currently not supported
+                    System.err.println("Subqueries are currently unsupported.");
+                    return null;
+                } else if (ops.elementAt(0) instanceof ZExpression
+                        || ops.elementAt(1) instanceof ZExpression) {
+                    System.err.println("Only simple binary expresssions of the form A op B are currently " +
+                            "supported, where A or B are fields, or constants.");
+                    return null;
+                } else {
+                    isJoin = false;
+                }
+
+                if (!isJoin) { // select node
+                    String column;
+                    String compValue;
+                    ZConstant op1 = (ZConstant) ops.elementAt(0);
+                    ZConstant op2 = (ZConstant) ops.elementAt(1);
+                    if (op1.getType() == ZConstant.COLUMNNAME) {
+                        column = op1.getValue();
+                        compValue = new String(op2.getValue());
+                        exp += column + "(column) " + newWx.getOperator() + " " + compValue + "(comp value)";
+                    } else {
+                        column = op2.getValue();
+                        compValue = new String(op1.getValue());
+                        exp += compValue + "(comp value)" + newWx.getOperator() + " " + column + "(column) ";
+                    }
+                }
+                exp += "\n\t";
+            }
+            return exp;
+        }
+        return null;
+    }
+*/
 
     /**
      * Modifies the table so that the table descriptor is correct with name, alias, and table of each column set correctly.

@@ -10,9 +10,7 @@ import Zql.ParseException;
 import Zql.ZConstant;
 import Zql.ZExp;
 import Zql.ZExpression;
-import Zql.ZFromItem;
 import Zql.ZQuery;
-import Zql.ZSelectItem;
 import Zql.ZStatement;
 import Zql.ZqlParser;
 
@@ -105,6 +103,7 @@ public class Main {
 
         String statementResults = con.runSQL(statement);
         ZQuery query = getQuery(statement);
+        processStatement(query);
         Table original = Util.parseStringAndQueryToTable(query, statementResults);
         String fileResults = Util.readFromFile(file);
         Table modified = Util.parseStringToTable(fileResults);
@@ -137,9 +136,10 @@ public class Main {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     public static void processStatement(ZQuery q) {
         try {
+            /*
             System.out.println("SELECT");
             Vector<ZSelectItem> selectList = q.getSelect();
             for (int i = 0; i < selectList.size(); i++) {
@@ -165,7 +165,7 @@ public class Main {
                 ZFromItem fi = from.elementAt(i);
                 System.out.println("\t" + fi.getAlias() + " " + fi.getTable());
             }
-
+             */
             // WHERE
             System.out.println("WHERE");
             ZExp w = q.getWhere();
@@ -195,99 +195,61 @@ public class Main {
     public static String processExpression(ZExpression wx) {
         if (wx.getOperator().equals("AND")) {
             String exp = "";
+            System.out.println("number of operands:" + wx.nbOperands());
             for (int i = 0; i < wx.nbOperands(); i++) {
                 if (!(wx.getOperand(i) instanceof ZExpression)) {
                     System.err.println("Nested queries are currently unsupported.");
                     return null;
                 }
                 ZExpression newWx = (ZExpression) wx.getOperand(i);
-                exp += processExpression(newWx);
+                Vector<ZExp> ops = newWx.getOperands();
+                if (ops.size() != 2) {
+                    System.err.println("Only simple binary expresssions of the form A op B are currently supported.");
+                    return null;
+                }
+
+                boolean isJoin = false;
+                boolean op1const = ops.elementAt(0) instanceof ZConstant; // otherwise
+                // is a Query
+                boolean op2const = ops.elementAt(1) instanceof ZConstant; // otherwise
+                // is a Query
+                if (op1const && op2const) {
+                    isJoin = ((ZConstant) ops.elementAt(0)).getType() == ZConstant.COLUMNNAME
+                            && ((ZConstant) ops.elementAt(1)).getType() == ZConstant.COLUMNNAME;
+                } else if (ops.elementAt(0) instanceof ZQuery
+                        || ops.elementAt(1) instanceof ZQuery) {
+                    isJoin = true;
+                    // currently not supported
+                    System.err.println("Subqueries are currently unsupported.");
+                    return null;
+                } else if (ops.elementAt(0) instanceof ZExpression
+                        || ops.elementAt(1) instanceof ZExpression) {
+                    System.err.println("Only simple binary expresssions of the form A op B are currently " +
+                            "supported, where A or B are fields, or constants.");
+                    return null;
+                } else {
+                    isJoin = false;
+                }
+
+                if (!isJoin) { // select node
+                    String column;
+                    String compValue;
+                    ZConstant op1 = (ZConstant) ops.elementAt(0);
+                    ZConstant op2 = (ZConstant) ops.elementAt(1);
+                    if (op1.getType() == ZConstant.COLUMNNAME) {
+                        column = op1.getValue();
+                        compValue = new String(op2.getValue());
+                        exp += column + "(column) " + newWx.getOperator() + " " + compValue + "(comp value)";
+                    } else {
+                        column = op2.getValue();
+                        compValue = new String(op1.getValue());
+                        exp += compValue + "(comp value)" + newWx.getOperator() + " " + column + "(column) ";
+                    }
+                }
+                exp += "\n\t";
             }
             return exp;
-        } else if (wx.getOperator().equals("OR")) {
-            System.err.println("OR expressions currently unsupported.");
-            return null;
-        } else {
-            // this is a binary expression comparing two constants
-            Vector<ZExp> ops = wx.getOperands();
-            if (ops.size() != 2) {
-                System.err.println("Only simple binary expresssions of the form A op B are currently supported.");
-                return null;
-            }
-
-            boolean isJoin = false;
-            boolean op1const = ops.elementAt(0) instanceof ZConstant; // otherwise
-            // is a
-            // Query
-            boolean op2const = ops.elementAt(1) instanceof ZConstant; // otherwise
-            // is a
-            // Query
-            if (op1const && op2const) {
-                isJoin = ((ZConstant) ops.elementAt(0)).getType() == ZConstant.COLUMNNAME
-                        && ((ZConstant) ops.elementAt(1)).getType() == ZConstant.COLUMNNAME;
-            } else if (ops.elementAt(0) instanceof ZQuery
-                    || ops.elementAt(1) instanceof ZQuery) {
-                isJoin = true;
-                // currently not supported
-                System.err.println("Subqueries are currently unsupported.");
-                return null;
-            } else if (ops.elementAt(0) instanceof ZExpression
-                    || ops.elementAt(1) instanceof ZExpression) {
-                System.err.println("Only simple binary expresssions of the form A op B are currently supported, where A or B are fields, or constants.");
-                return null;
-            } else {
-                isJoin = false;
-            }
-
-            if (isJoin) { // join node
-                System.err.println("Joins are currently unsupported.");
-                return null;
-                /*
-                String tab1field = "", tab2field = "";
-
-                if (!op1const) { // left op is a nested query
-                    // generate a virtual table for the left op
-                    // this isn't a valid ZQL query
-                } else {
-                    tab1field = ((ZConstant) ops.elementAt(0)).getValue();
-
-                }
-
-                if (!op2const) { // right op is a nested query
-                    try {
-                        LogicalPlan sublp = parseQueryLogicalPlan(tid,
-                                (ZQuery) ops.elementAt(1));
-                        DbIterator pp = sublp.physicalPlan(tid,
-                                TableStats.getStatsMap(), explain);
-                        lp.addJoin(tab1field, pp, op);
-                    } catch (IOException e) {
-                        throw new simpledb.ParsingException("Invalid subquery "
-                                + ops.elementAt(1));
-                    } catch (Zql.ParseException e) {
-                        throw new simpledb.ParsingException("Invalid subquery "
-                                + ops.elementAt(1));
-                    }
-                } else {
-                    tab2field = ((ZConstant) ops.elementAt(1)).getValue();
-                    lp.addJoin(tab1field, tab2field, op);
-                }
-                 */
-            } else { // select node
-                String column;
-                String compValue;
-                ZConstant op1 = (ZConstant) ops.elementAt(0);
-                ZConstant op2 = (ZConstant) ops.elementAt(1);
-                if (op1.getType() == ZConstant.COLUMNNAME) {
-                    column = op1.getValue();
-                    compValue = new String(op2.getValue());
-                    return column + "(column) " + wx.getOperator() + compValue + "(comp value)";
-                } else {
-                    column = op2.getValue();
-                    compValue = new String(op1.getValue());
-
-                    return compValue + "(comp value)" + wx.getOperator() + column + "(column) ";
-                }
-            }
         }
+        return null;
     }
 }
