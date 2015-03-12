@@ -189,4 +189,165 @@ public class QueryGeneratorTest {
         String res = QueryGenerator.generate(query, original, modified);
         assertEquals("select students.name, students.id, students.major from students", res);
     }
+    
+    /**
+     * Test number of where expression from 1 to 0
+     * Original where name='Adrian Sham'
+     * Modified should be empty
+     */
+    @Test
+    public void testWhereRemoveOne() {
+        ZQuery originalQuery = Main.getQuery("SELECT * from students where name='Adrian Sham';");
+        original = setupBaseTable();
+        
+        Tuple tup = new Tuple(3);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        original.add(tup);
+        
+        modified = setupBaseTable();
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Bob Sue"));
+        tup.setField(1, new IntField(1234567));
+        tup.setField(2, new StringField("biology"));
+        modified.add(tup);
+        
+        String res = QueryGenerator.generate(originalQuery, original, modified);
+        assertEquals("select students.name, students.id, students.major from students", res);
+    }
+    
+    /**
+     * Helper method for setting up a 3 column base table
+     * @return Table
+     */
+    private Table setupBaseTable() {
+        List<Type> typeList = new ArrayList<Type>();
+        typeList.add(Type.TEXT);
+        typeList.add(Type.INT);
+        typeList.add(Type.TEXT);
+        List<String> nameList =  new ArrayList<String>();
+        nameList.add("name");
+        nameList.add("id");
+        nameList.add("major");
+        List<String> aliasList =  new ArrayList<String>();
+        aliasList.add(null);
+        aliasList.add(null);
+        aliasList.add(null);
+        List<String> tableList =  new ArrayList<String>();
+        tableList.add("students");
+        tableList.add("students");
+        tableList.add("students");
+        return new Table(new TableDescriptor(typeList, nameList, aliasList, tableList));
+    }
+    
+    /**
+     * Test number of where expression from 2 to 1
+     * 
+     * original where name='Adrian Sham' and major='computer science'
+     * 
+     * modified should get major='computer science'
+     */
+    @Test
+    public void testWhereTwoToOne() {
+        ZQuery originalQuery = Main.getQuery("SELECT * from students where name='Adrian Sham' AND major='computer science';");
+        original = setupBaseTable();
+        Tuple tup = new Tuple(3);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        original.add(tup);
+        
+        modified = setupBaseTable();
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+
+        String res = QueryGenerator.generate(originalQuery, original, modified);
+        assertEquals("select students.name, students.id, students.major from students where (major = 'computer science')", res);
+    }
+    
+    /**
+     * Test adding where expressions
+     * Original : 'empty'
+     * Modified: where name='Adrian Sham'
+     */
+    @Test
+    public void testWhereAddOne() {
+        ZQuery originalQuery = Main.getQuery("SELECT * from students;");
+        original = setupBaseTable();
+        Tuple tup = new Tuple(3);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        original.add(tup);
+        
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("computer science"));
+        original.add(tup);
+
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Bob Sue"));
+        tup.setField(1, new IntField(1234567));
+        tup.setField(2, new StringField("biology"));
+        original.add(tup);
+        
+        modified = setupBaseTable();
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+
+        String res = QueryGenerator.generate(originalQuery, original, modified);
+        assertEquals("select students.name, students.id, students.major from students where (name = 'Adrian Sham')", res);
+    }
+    
+    /**
+     * Test the case where one is remove and one is added
+     */
+    @Test
+    public void testWhereAddOneRemoveOne() {
+        ZQuery originalQuery = Main.getQuery("SELECT * from students where name='Adrian Sham';");
+        original = setupBaseTable();
+        Tuple tup = new Tuple(3);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        original.add(tup);
+        
+        modified = setupBaseTable();
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+        
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+
+        String res = QueryGenerator.generate(originalQuery, original, modified);
+        assertEquals("select students.name, students.id, students.major from students where (major = 'computer science')", res);
+    }
 }
