@@ -320,7 +320,6 @@ public class QueryGeneratorTest {
         modified.add(tup);
 
         String res = QueryGenerator.generate(originalQuery, original, modified);
-        System.out.println(res);
         boolean answer1 = "select students.name, students.id, students.major from students where (name = 'Adrian Sham')".equals(res);
         boolean answer2 = "select students.name, students.id, students.major from students where (id = 1266067)".equals(res);
         assertTrue(res, answer1^answer2);
@@ -367,7 +366,6 @@ public class QueryGeneratorTest {
         modified.add(tup);
 
         String res = QueryGenerator.generate(originalQuery, original, modified);
-        System.out.println(res);
         assertEquals("select students.name, students.id, students.major from students where (major = 'computer science')", res);
         
     }
@@ -459,7 +457,9 @@ public class QueryGeneratorTest {
         modified.add(tup);
         
         String res = QueryGenerator.generate(originalQuery, original, modified);
-        assertEquals("select students.name, students.id, students.gender, students.major from students where ((gender = 'F') AND (major = 'computer science'))", res);
+        boolean ans1 = "select students.name, students.id, students.gender, students.major from students where ((gender = 'F') AND (major = 'computer science'))".equals(res);
+        boolean ans2 = "select students.name, students.id, students.gender, students.major from students where ((major = 'computer science') AND (gender = 'F'))".equals(res);
+        assertTrue(res, ans1^ans2);
     }
     
     private Table setupBaseTable2() {

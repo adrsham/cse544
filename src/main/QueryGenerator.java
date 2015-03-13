@@ -30,7 +30,9 @@ public class QueryGenerator {
     }
     
     public static void getModifiedWhereExpressions(ZQuery originalQuery, ZQuery curModifiedQuery, Table modified) {
-        if (!(originalQuery.getWhere() instanceof ZExpression)) {
+        if (originalQuery.getWhere() == null) {
+            //don't return, might need to add where expressions
+        }else if (!(originalQuery.getWhere() instanceof ZExpression)) {
             System.err.println("Nested queries are currently unsupported.");
             System.err.println(originalQuery.getWhere());
             return;
@@ -80,7 +82,6 @@ public class QueryGenerator {
                 String result = con.runSQL(curModifiedQuery.toString());
                 Table curMod = Util.parseStringToTable(result);
                 if (modified.equals(curMod)) {
-                    //if we get the same answer, we are done
                     return;
                 }
             }
