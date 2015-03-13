@@ -322,7 +322,8 @@ public class QueryGeneratorTest {
         String res = QueryGenerator.generate(originalQuery, original, modified);
         boolean answer1 = "select students.name, students.id, students.major from students where (name = 'Adrian Sham')".equals(res);
         boolean answer2 = "select students.name, students.id, students.major from students where (id = 1266067)".equals(res);
-        assertTrue(res, answer1^answer2);
+        boolean answer3 = "select students.name, students.id, students.major from students where (id >= 1266067)".equals(res);
+        assertTrue(res, answer1^answer2^answer3);
     }
     
     /**
