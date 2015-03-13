@@ -1,8 +1,12 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 public class Table {
@@ -55,13 +59,41 @@ public class Table {
         }
         return list;
     }
+    
+    /**
+     * Returns a mapping of column name to set of fields
+     * @return
+     */
+    public HashMap<String, HashSet<Field>> getSetOfFields() {
+        HashMap<String, HashSet<Field>> mapping = new HashMap<>();
+        //add all sets
+        for (int i = 0; i < td.numFields(); i++) {
+            mapping.put(td.getFieldName(i), new HashSet<Field>());
+        }
+        for (int i = 0; i < tuples.size(); i++) {
+            Tuple t = tuples.get(i);
+            for (int j = 0; j < t.length; j++) {
+                HashSet <Field> hs = mapping.get(td.getFieldName(j));
+                hs.add(t.getField(j));
+                mapping.put(td.getFieldName(j), hs);
+            }
+        }
+        return mapping;
+    }
 
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
-        return "Table [td=" + td + "]";
+        StringBuilder buf = new StringBuilder();
+        buf.append("Table [td=" + td + "]");
+        buf.append(System.lineSeparator());
+        for (Tuple t : tuples) {
+            buf.append(t);
+            buf.append(System.lineSeparator());
+        }
+        return buf.toString();
     }
 
     /* (non-Javadoc)
