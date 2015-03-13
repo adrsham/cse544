@@ -313,13 +313,63 @@ public class QueryGeneratorTest {
         original.add(tup);
         
         modified = setupBaseTable();
+        tup = new Tuple(3);
         tup.setField(0, new StringField("Adrian Sham"));
         tup.setField(1, new IntField(1266067));
         tup.setField(2, new StringField("computer science"));
         modified.add(tup);
 
         String res = QueryGenerator.generate(originalQuery, original, modified);
-        assertEquals("select students.name, students.id, students.major from students where (name = 'Adrian Sham')", res);
+        System.out.println(res);
+        boolean answer1 = "select students.name, students.id, students.major from students where (name = 'Adrian Sham')".equals(res);
+        boolean answer2 = "select students.name, students.id, students.major from students where (id = 1266067)".equals(res);
+        assertTrue(res, answer1^answer2);
+    }
+    
+    /**
+     * Test adding where expressions
+     * Original : 'empty'
+     * Modified: where major='computer science'
+     */
+    @Test
+    public void testWhereAddOne2() {
+        ZQuery originalQuery = Main.getQuery("SELECT * from students;");
+        original = setupBaseTable();
+        Tuple tup = new Tuple(3);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        original.add(tup);
+        
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("computer science"));
+        original.add(tup);
+
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Bob Sue"));
+        tup.setField(1, new IntField(1234567));
+        tup.setField(2, new StringField("biology"));
+        original.add(tup);
+        
+        modified = setupBaseTable();
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+        
+        tup = new Tuple(3);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("computer science"));
+        modified.add(tup);
+
+        String res = QueryGenerator.generate(originalQuery, original, modified);
+        System.out.println(res);
+        assertEquals("select students.name, students.id, students.major from students where (major = 'computer science')", res);
+        
     }
     
     /**
@@ -349,5 +399,90 @@ public class QueryGeneratorTest {
 
         String res = QueryGenerator.generate(originalQuery, original, modified);
         assertEquals("select students.name, students.id, students.major from students where (major = 'computer science')", res);
+    }
+    
+    /**
+     * Test case where we are looking for 2 expressions
+     * WHERE major='computer science' AND gender="F"
+     */
+    @Test
+    public void testWhereAddTwoStatements() {
+        db.executeUpdate(DROP_TABLE);
+        db.executeUpdate("CREATE table students ( name text, id int, gender text, major text);");
+        db.executeUpdate("INSERT into students values ('Adrian Sham', 1266067, 'M', 'computer science');");
+        db.executeUpdate("INSERT into students values ('Lindsey Nguyen', 1130418, 'F', 'computer science');");
+        db.executeUpdate("INSERT into students values ('Lily Sue', 1234567, 'F', 'computer science');");
+        db.executeUpdate("INSERT into students values ('Mary Sue', 2345675, 'F', 'biology');");
+        ZQuery originalQuery = Main.getQuery("SELECT * from students;");
+        original = setupBaseTable2();
+        Tuple tup = new Tuple(4);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(1266067));
+        tup.setField(2, new StringField("M"));
+        tup.setField(3, new StringField("computer science"));
+        original.add(tup);
+        
+        tup = new Tuple(4);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("F"));
+        tup.setField(3, new StringField("computer science"));
+        original.add(tup);
+        
+        tup = new Tuple(4);
+        tup.setField(0, new StringField("Lily Sue"));
+        tup.setField(1, new IntField(1234567));
+        tup.setField(2, new StringField("F"));
+        tup.setField(3, new StringField("computer science"));
+        original.add(tup);
+        
+        tup = new Tuple(4);
+        tup.setField(0, new StringField("Mary Sue"));
+        tup.setField(1, new IntField(2345675));
+        tup.setField(2, new StringField("F"));
+        tup.setField(3, new StringField("biology"));
+        original.add(tup);
+        
+        modified = setupBaseTable2();
+        tup = new Tuple(4);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(1130418));
+        tup.setField(2, new StringField("F"));
+        tup.setField(3, new StringField("computer science"));
+        modified.add(tup);
+        
+        tup = new Tuple(4);
+        tup.setField(0, new StringField("Lily Sue"));
+        tup.setField(1, new IntField(1234567));
+        tup.setField(2, new StringField("F"));
+        tup.setField(3, new StringField("computer science"));
+        modified.add(tup);
+        
+        String res = QueryGenerator.generate(originalQuery, original, modified);
+        assertEquals("select students.name, students.id, students.gender, students.major from students where ((gender = 'F') AND (major = 'computer science'))", res);
+    }
+    
+    private Table setupBaseTable2() {
+        List<Type> typeList = new ArrayList<Type>();
+        typeList.add(Type.TEXT);
+        typeList.add(Type.INT);
+        typeList.add(Type.TEXT);
+        typeList.add(Type.TEXT);
+        List<String> nameList =  new ArrayList<String>();
+        nameList.add("name");
+        nameList.add("id");
+        nameList.add("gender");
+        nameList.add("major");
+        List<String> aliasList =  new ArrayList<String>();
+        aliasList.add(null);
+        aliasList.add(null);
+        aliasList.add(null);
+        aliasList.add(null);
+        List<String> tableList =  new ArrayList<String>();
+        tableList.add("students");
+        tableList.add("students");
+        tableList.add("students");
+        tableList.add("students");
+        return new Table(new TableDescriptor(typeList, nameList, aliasList, tableList));
     }
 }
