@@ -406,81 +406,141 @@ public class QueryGeneratorTest {
     @Test
     public void testWhereAddTwoStatements() {
         db.executeUpdate(DROP_TABLE);
-        db.executeUpdate("CREATE table students ( name text, id int, gender text, major text);");
-        db.executeUpdate("INSERT into students values ('Adrian Sham', 1266067, 'M', 'computer science');");
-        db.executeUpdate("INSERT into students values ('Lindsey Nguyen', 1130418, 'F', 'computer science');");
-        db.executeUpdate("INSERT into students values ('Lily Sue', 1234567, 'F', 'computer science');");
-        db.executeUpdate("INSERT into students values ('Mary Sue', 2345675, 'F', 'biology');");
+        db.executeUpdate("CREATE table students ( name text, gender text, major text);");
+        db.executeUpdate("INSERT into students values ('Adrian Sham', 'M', 'computer science');");
+        db.executeUpdate("INSERT into students values ('Lindsey Nguyen', 'F', 'computer science');");
+        db.executeUpdate("INSERT into students values ('Lily Sue', 'F', 'computer science');");
+        db.executeUpdate("INSERT into students values ('Mary Sue', 'F', 'biology');");
         ZQuery originalQuery = Main.getQuery("SELECT * from students;");
         original = setupBaseTable2();
-        Tuple tup = new Tuple(4);
+        Tuple tup = new Tuple(3);
         tup.setField(0, new StringField("Adrian Sham"));
-        tup.setField(1, new IntField(1266067));
-        tup.setField(2, new StringField("M"));
-        tup.setField(3, new StringField("computer science"));
+        tup.setField(1, new StringField("M"));
+        tup.setField(2, new StringField("computer science"));
         original.add(tup);
         
-        tup = new Tuple(4);
+        tup = new Tuple(3);
         tup.setField(0, new StringField("Lindsey Nguyen"));
-        tup.setField(1, new IntField(1130418));
-        tup.setField(2, new StringField("F"));
-        tup.setField(3, new StringField("computer science"));
+        tup.setField(1, new StringField("F"));
+        tup.setField(2, new StringField("computer science"));
         original.add(tup);
         
-        tup = new Tuple(4);
+        tup = new Tuple(3);
         tup.setField(0, new StringField("Lily Sue"));
-        tup.setField(1, new IntField(1234567));
-        tup.setField(2, new StringField("F"));
-        tup.setField(3, new StringField("computer science"));
+        tup.setField(1, new StringField("F"));
+        tup.setField(2, new StringField("computer science"));
         original.add(tup);
         
-        tup = new Tuple(4);
+        tup = new Tuple(3);
         tup.setField(0, new StringField("Mary Sue"));
-        tup.setField(1, new IntField(2345675));
-        tup.setField(2, new StringField("F"));
-        tup.setField(3, new StringField("biology"));
+        tup.setField(1, new StringField("F"));
+        tup.setField(2, new StringField("biology"));
         original.add(tup);
         
         modified = setupBaseTable2();
-        tup = new Tuple(4);
+        tup = new Tuple(3);
         tup.setField(0, new StringField("Lindsey Nguyen"));
-        tup.setField(1, new IntField(1130418));
-        tup.setField(2, new StringField("F"));
-        tup.setField(3, new StringField("computer science"));
+        tup.setField(1, new StringField("F"));
+        tup.setField(2, new StringField("computer science"));
         modified.add(tup);
         
-        tup = new Tuple(4);
+        tup = new Tuple(3);
         tup.setField(0, new StringField("Lily Sue"));
-        tup.setField(1, new IntField(1234567));
-        tup.setField(2, new StringField("F"));
-        tup.setField(3, new StringField("computer science"));
+        tup.setField(1, new StringField("F"));
+        tup.setField(2, new StringField("computer science"));
         modified.add(tup);
         
         String res = QueryGenerator.generate(originalQuery, original, modified);
-        boolean ans1 = "select students.name, students.id, students.gender, students.major from students where ((gender = 'F') AND (major = 'computer science'))".equals(res);
-        boolean ans2 = "select students.name, students.id, students.gender, students.major from students where ((major = 'computer science') AND (gender = 'F'))".equals(res);
+        boolean ans1 = "select students.name, students.gender, students.major from students where ((gender = 'F') AND (major = 'computer science'))".equals(res);
+        boolean ans2 = "select students.name, students.gender, students.major from students where ((major = 'computer science') AND (gender = 'F'))".equals(res);
         assertTrue(res, ans1^ans2);
+    }
+    
+    /**
+     * See if query generator can find >=
+     */
+    @Test
+    public void testWhereNumbers() {
+        db.executeUpdate(DROP_TABLE);
+        db.executeUpdate("CREATE table students ( name text, age int);");
+        db.executeUpdate("INSERT into students values ('Adrian Sham', 25);");
+        db.executeUpdate("INSERT into students values ('Lindsey Nguyen', 21);");
+        db.executeUpdate("INSERT into students values ('Lily Sue', 15);");
+        db.executeUpdate("INSERT into students values ('Mary Sue', 17);");
+        ZQuery originalQuery = Main.getQuery("SELECT * from students;");
+        original = setupBaseTable3();
+        Tuple tup = new Tuple(2);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(25));
+        original.add(tup);
+        
+        tup = new Tuple(2);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(21));
+        original.add(tup);
+        
+        tup = new Tuple(2);
+        tup.setField(0, new StringField("Lily Sue"));
+        tup.setField(1, new IntField(15));
+        original.add(tup);
+        
+        tup = new Tuple(2);
+        tup.setField(0, new StringField("Mary Sue"));
+        tup.setField(1, new IntField(17));
+        original.add(tup);
+
+        
+        modified = setupBaseTable3();
+        tup = new Tuple(2);
+        tup.setField(0, new StringField("Adrian Sham"));
+        tup.setField(1, new IntField(25));
+        modified.add(tup);
+        
+        tup = new Tuple(2);
+        tup.setField(0, new StringField("Lindsey Nguyen"));
+        tup.setField(1, new IntField(21));
+        modified.add(tup);
+
+        String res = QueryGenerator.generate(originalQuery, original, modified);
+        assertEquals("select students.name, students.age from students where (age >= 21)", res);
     }
     
     private Table setupBaseTable2() {
         List<Type> typeList = new ArrayList<Type>();
         typeList.add(Type.TEXT);
-        typeList.add(Type.INT);
         typeList.add(Type.TEXT);
         typeList.add(Type.TEXT);
         List<String> nameList =  new ArrayList<String>();
         nameList.add("name");
-        nameList.add("id");
         nameList.add("gender");
         nameList.add("major");
         List<String> aliasList =  new ArrayList<String>();
         aliasList.add(null);
         aliasList.add(null);
         aliasList.add(null);
-        aliasList.add(null);
         List<String> tableList =  new ArrayList<String>();
         tableList.add("students");
         tableList.add("students");
+        tableList.add("students");
+        return new Table(new TableDescriptor(typeList, nameList, aliasList, tableList));
+    }
+    
+    
+    /**
+     * Setup table with name text, age int
+     * @return
+     */
+    private Table setupBaseTable3() {
+        List<Type> typeList = new ArrayList<Type>();
+        typeList.add(Type.TEXT);
+        typeList.add(Type.INT);
+        List<String> nameList =  new ArrayList<String>();
+        nameList.add("name");
+        nameList.add("age");
+        List<String> aliasList =  new ArrayList<String>();
+        aliasList.add(null);
+        aliasList.add(null);
+        List<String> tableList =  new ArrayList<String>();
         tableList.add("students");
         tableList.add("students");
         return new Table(new TableDescriptor(typeList, nameList, aliasList, tableList));

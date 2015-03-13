@@ -58,6 +58,8 @@ public class QueryGenerator {
             for (Field setEntry: entry.getValue()) {
                 if (setEntry instanceof IntField) {
                     exp.add(new ZExpression("=", new ZConstant(entry.getKey(), ZConstant.COLUMNNAME), new ZConstant(setEntry.toString(), ZConstant.NUMBER)));
+                    exp.add(new ZExpression(">=", new ZConstant(entry.getKey(), ZConstant.COLUMNNAME), new ZConstant(setEntry.toString(), ZConstant.NUMBER)));
+                    exp.add(new ZExpression("<=", new ZConstant(entry.getKey(), ZConstant.COLUMNNAME), new ZConstant(setEntry.toString(), ZConstant.NUMBER)));
                 } else {
                     exp.add(new ZExpression("=", new ZConstant(entry.getKey(), ZConstant.COLUMNNAME), new ZConstant(setEntry.toString(), ZConstant.STRING)));
                 }
