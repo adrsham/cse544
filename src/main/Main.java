@@ -83,13 +83,17 @@ public class Main {
         String statement = Util.correctStatementFormat(reader.nextLine());
         System.out.print("filepath (leave blank to just print to stdout): ");
         String fileLocation = reader.nextLine();
+        long start = System.currentTimeMillis();
         ZQuery query = getQuery(statement);
 
         String results = con.runSQL(statement, query, dbInfo);
+        long time = System.currentTimeMillis() - start;
         if (!fileLocation.equals("")) {
             Util.writeToFile(fileLocation, results);
         }
         System.out.println(results);
+        System.out.printf("----------------\n%.4f seconds\n\n",
+                ((double) time / 1000.0));
     }
 
     public static void printUpdateQuery(Scanner reader, String line) {
@@ -100,19 +104,21 @@ public class Main {
         String file = reader.nextLine();
         System.out.print("filepath (leave blank to just print to stdout): ");
         String fileLocation = reader.nextLine();
-
+        long start = System.currentTimeMillis();
         String statementResults = con.runSQL(statement);
         ZQuery query = getQuery(statement);
         processStatement(query);
         Table original = Util.parseStringAndQueryToTable(query, statementResults);
         String fileResults = Util.readFromFile(file);
         Table modified = Util.parseStringToTable(fileResults);
-
         String resultQuery = QueryGenerator.generate(getQuery(statement), original, modified);
+        long time = System.currentTimeMillis() - start;
         if (!fileLocation.equals("")) {
             Util.writeToFile(fileLocation, resultQuery);
         }
         System.out.println(resultQuery);
+        System.out.printf("----------------\n%.4f seconds\n\n",
+                ((double) time / 1000.0));
     }
 
     public static ZQuery getQuery(String statement) {

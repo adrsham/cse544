@@ -16,7 +16,7 @@ public class Table {
     public Table(TableDescriptor td) {
         this.td = td;
         // linked list if we plan to add/remove a lot. not sure what we will be doing
-        this.tuples = new LinkedList<Tuple>();
+        this.tuples = new ArrayList<Tuple>();
     }
 
     public boolean add(Tuple t) {
@@ -73,9 +73,7 @@ public class Table {
         for (int i = 0; i < tuples.size(); i++) {
             Tuple t = tuples.get(i);
             for (int j = 0; j < t.length; j++) {
-                HashSet <Field> hs = mapping.get(td.getFieldName(j));
-                hs.add(t.getField(j));
-                mapping.put(td.getFieldName(j), hs);
+                mapping.get(td.getFieldName(j)).add(t.getField(j));
             }
         }
         return mapping;

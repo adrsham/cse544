@@ -26,9 +26,10 @@ public class QueryGenerator {
         modifiedQuery.addSelect(getModifiedSelectList(originalQuery, original, modified));
         modifiedQuery.addFrom(originalQuery.getFrom());
         getModifiedWhereExpressions(originalQuery, modifiedQuery, modified);
+
         return modifiedQuery.toString();
     }
-    
+
     public static void getModifiedWhereExpressions(ZQuery originalQuery, ZQuery curModifiedQuery, Table modified) {
         if (originalQuery.getWhere() == null) {
             //don't return, might need to add where expressions
@@ -37,7 +38,7 @@ public class QueryGenerator {
             System.err.println(originalQuery.getWhere());
             return;
         }
-        
+
         ZExpression whereClause = (ZExpression) originalQuery.getWhere();
         // TODO currently going to assume that there is no alias going on. must fix this.
         curModifiedQuery.addWhere(whereClause);
@@ -49,7 +50,6 @@ public class QueryGenerator {
             return;
         }
         Set<ZExpression> exp = getWhereClauses(whereClause);
-            
         //put each column of tuples into a set
         HashMap<String, HashSet<Field>> fieldSet = modified.getSetOfFields();
         //add all possible expressions for where into this set
@@ -79,7 +79,6 @@ public class QueryGenerator {
                         currentSet.add(expArray[j]);
                     }
                 }
-                
                 //try with AND
                 curModifiedQuery.addWhere(convertSetToOneExp(currentSet));
                 String result = con.runSQL(curModifiedQuery.toString());
@@ -98,7 +97,7 @@ public class QueryGenerator {
             }
         }
     }
-    
+
     /**
      * Used to calculate the number of combination of r from n
      * 
@@ -109,7 +108,7 @@ public class QueryGenerator {
     private static long choose (int n, int r) {
         return (factorial(n).divide(factorial(r).multiply(factorial(n-r)))).longValue();
     }
-    
+
     /**
      * Calculate the factorial of n
      * 
@@ -123,7 +122,7 @@ public class QueryGenerator {
         }
         return result;
     }
-    
+
     /**
      * Enumerate all possible sets of "size" from v
      * 
@@ -137,7 +136,7 @@ public class QueryGenerator {
         getBitCombinations(allSets, start, 0, 0, size, fullSize);
         return allSets;
     }
-    
+
     /**
      * Use recursion to calculate all possible subsets
      * 
@@ -159,13 +158,13 @@ public class QueryGenerator {
         bs.set(start);
         current++;
         getBitCombinations(allSets, bs, start + 1, current, target, end);
-        
+
         bs.clear(start);
         current--;
         getBitCombinations(allSets, bs, start +1, current, target, end);
     }
-    
-    
+
+
     private static ZExp convertSetToOneExp(Set<ZExpression> set) {
         if (set.size() == 0) {
             return null;
@@ -193,7 +192,7 @@ public class QueryGenerator {
             return newExp;
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private static Set<ZExpression> getWhereClauses(ZExpression wc) {
         Set<ZExpression> res = new HashSet<ZExpression>();
@@ -254,69 +253,6 @@ public class QueryGenerator {
         }
         return res;
     }
-/*
-    public static ZExp getModifiedWhereList(ZQuery originalQuery, Table original, Table modified) {
-
-        if (wx.getOperator().equals("AND")) {
-            String exp = "";
-            System.out.println("number of operands:" + wx.nbOperands());
-            for (int i = 0; i < wx.nbOperands(); i++) {
-                if (!(wx.getOperand(i) instanceof ZExpression)) {
-                    System.err.println("Nested queries are currently unsupported.");
-                    return null;
-                }
-                ZExpression newWx = (ZExpression) wx.getOperand(i);
-                Vector<ZExp> ops = newWx.getOperands();
-                if (ops.size() != 2) {
-                    System.err.println("Only simple binary expresssions of the form A op B are currently supported.");
-                    return null;
-                }
-
-                boolean isJoin = false;
-                boolean op1const = ops.elementAt(0) instanceof ZConstant; // otherwise
-                // is a Query
-                boolean op2const = ops.elementAt(1) instanceof ZConstant; // otherwise
-                // is a Query
-                if (op1const && op2const) {
-                    isJoin = ((ZConstant) ops.elementAt(0)).getType() == ZConstant.COLUMNNAME
-                            && ((ZConstant) ops.elementAt(1)).getType() == ZConstant.COLUMNNAME;
-                } else if (ops.elementAt(0) instanceof ZQuery
-                        || ops.elementAt(1) instanceof ZQuery) {
-                    isJoin = true;
-                    // currently not supported
-                    System.err.println("Subqueries are currently unsupported.");
-                    return null;
-                } else if (ops.elementAt(0) instanceof ZExpression
-                        || ops.elementAt(1) instanceof ZExpression) {
-                    System.err.println("Only simple binary expresssions of the form A op B are currently " +
-                            "supported, where A or B are fields, or constants.");
-                    return null;
-                } else {
-                    isJoin = false;
-                }
-
-                if (!isJoin) { // select node
-                    String column;
-                    String compValue;
-                    ZConstant op1 = (ZConstant) ops.elementAt(0);
-                    ZConstant op2 = (ZConstant) ops.elementAt(1);
-                    if (op1.getType() == ZConstant.COLUMNNAME) {
-                        column = op1.getValue();
-                        compValue = new String(op2.getValue());
-                        exp += column + "(column) " + newWx.getOperator() + " " + compValue + "(comp value)";
-                    } else {
-                        column = op2.getValue();
-                        compValue = new String(op1.getValue());
-                        exp += compValue + "(comp value)" + newWx.getOperator() + " " + column + "(column) ";
-                    }
-                }
-                exp += "\n\t";
-            }
-            return exp;
-        }
-        return null;
-    }
-*/
 
     /**
      * Modifies the table so that the table descriptor is correct with name, alias, and table of each column set correctly.
@@ -324,6 +260,18 @@ public class QueryGenerator {
      */
     @SuppressWarnings("unchecked")
     public static Vector<ZSelectItem> getModifiedSelectList(ZQuery originalQuery, Table original, Table modified) {
+        if(original.contains(modified) || modified.contains(original)) {
+            TableDescriptor tdOriginal = original.getTD();
+            TableDescriptor tdModified = modified.getTD();
+            for(int i = 0; i < tdOriginal.numFields(); i++) {
+                TQDItem tdio = (TQDItem) tdOriginal.getFieldInfo(i);
+                TQDItem tdim = (TQDItem) tdModified.getFieldInfo(i);
+                tdim.fieldTable = tdio.fieldTable;
+                tdim.fieldName = tdio.fieldName;
+                tdim.fieldAlias = null;
+            }
+            return originalQuery.getSelect();
+        }
         DatabaseConnector con = DatabaseConnector.getInstance();
         Vector<ZSelectItem> select = new Vector<ZSelectItem>();
         List<List<Field>> fieldsOriginal = original.getColOfFields();

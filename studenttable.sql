@@ -5,7 +5,8 @@ CREATE TABLE "students" (
   id text
 );
 
-INSERT INTO "students" (name,id) VALUES ('Jael Byers','7974412');
+INSERT INTO "students" (name,id) VALUES ('Jael Byers','1234567');
+
 INSERT INTO "students" (name,id) VALUES ('Meghan Keller','7480190');
 INSERT INTO "students" (name,id) VALUES ('Bruno Golden','0401526');
 INSERT INTO "students" (name,id) VALUES ('Arthur Moss','2049019');
@@ -15,6 +16,7 @@ INSERT INTO "students" (name,id) VALUES ('Tashya Blackburn','4506340');
 INSERT INTO "students" (name,id) VALUES ('Lionel Farrell','8906470');
 INSERT INTO "students" (name,id) VALUES ('Ori Gamble','9216465');
 INSERT INTO "students" (name,id) VALUES ('Elvis Macias','4903644');
+
 INSERT INTO "students" (name,id) VALUES ('Magee Le','5913384');
 INSERT INTO "students" (name,id) VALUES ('Hedda Clay','3959736');
 INSERT INTO "students" (name,id) VALUES ('Jaquelyn Gonzalez','8913904');
@@ -105,3 +107,33 @@ INSERT INTO "students" (name,id) VALUES ('Angelica Mcfarland','4882944');
 INSERT INTO "students" (name,id) VALUES ('Maite Ortega','0209962');
 INSERT INTO "students" (name,id) VALUES ('Paula Berry','7950785');
 INSERT INTO "students" (name,id) VALUES ('Judith Barron','0009690');
+INSERT INTO "students" (name,id) VALUES ('Nyssa Ewing','9197890');
+INSERT INTO "students" (name,id) VALUES ('Sigourney Hood','5505302');
+INSERT INTO "students" (name,id) VALUES ('Kiara Coleman','9533395');
+INSERT INTO "students" (name,id) VALUES ('Nyssa Hammond','7088861');
+INSERT INTO "students" (name,id) VALUES ('Stone Marks','4789451');
+INSERT INTO "students" (name,id) VALUES ('Merritt Summers','0360297');
+INSERT INTO "students" (name,id) VALUES ('Adele Rice','9979415');
+INSERT INTO "students" (name,id) VALUES ('Nichole Savage','9580608');
+INSERT INTO "students" (name,id) VALUES ('Lawrence Leach','0888585');
+INSERT INTO "students" (name,id) VALUES ('Wyatt Wise','1278306');
+INSERT INTO "students" (name,id) VALUES ('Vivien Mcknight','4583180');
+INSERT INTO "students" (name,id) VALUES ('Quinn Fulton','3644143');
+INSERT INTO "students" (name,id) VALUES ('Christen Stewart','5654442');
+INSERT INTO "students" (name,id) VALUES ('Jael Ware','6617227');
+INSERT INTO "students" (name,id) VALUES ('Katelyn Mosley','1005130');
+INSERT INTO "students" (name,id) VALUES ('Halla Patel','5791579');
+INSERT INTO "students" (name,id) VALUES ('Nerea Fowler','2302385');
+INSERT INTO "students" (name,id) VALUES ('Linda Pacheco','0986630');
+INSERT INTO "students" (name,id) VALUES ('Miriam Lambert','2483348');
+INSERT INTO "students" (name,id) VALUES ('Olivia Hartman','7076473');
+INSERT INTO "students" (name,id) VALUES ('Rudyard Villarreal','9998844');
+INSERT INTO "students" (name,id) VALUES ('Keelie Rosa','9670646');
+INSERT INTO "students" (name,id) VALUES ('Thor Steele','2110889');
+INSERT INTO "students" (name,id) VALUES ('Judah Santos','0081610');
+INSERT INTO "students" (name,id) VALUES ('Sharon Le','4399818');
+INSERT INTO "students" (name,id) VALUES ('Ryan Pena','2548978');
+INSERT INTO "students" (name,id) VALUES ('Rae Carpenter','0939959');
+INSERT INTO "students" (name,id) VALUES ('Eden Roy','4368769');
+INSERT INTO "students" (name,id) VALUES ('Carl Phillips','5871168');
+INSERT INTO "students" (name,id) VALUES ('Dai Holcomb','9127484');
