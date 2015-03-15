@@ -79,10 +79,19 @@ public class QueryGenerator {
                         currentSet.add(expArray[j]);
                     }
                 }
-
+                
+                //try with AND
                 curModifiedQuery.addWhere(convertSetToOneExp(currentSet));
                 String result = con.runSQL(curModifiedQuery.toString());
                 Table curMod = Util.parseStringToTable(result);
+                if (modified.equals(curMod)) {
+                    return;
+                }
+                
+                //try with OR
+                curModifiedQuery.addWhere(convertSetToOneExpOR(currentSet));
+                result = con.runSQL(curModifiedQuery.toString());
+                curMod = Util.parseStringToTable(result);
                 if (modified.equals(curMod)) {
                     return;
                 }
@@ -164,6 +173,20 @@ public class QueryGenerator {
             return set.iterator().next();
         } else {
             ZExpression newExp = new ZExpression("AND");
+            for (ZExpression exp : set) {
+                newExp.addOperand(exp);
+            }
+            return newExp;
+        }
+    }
+    
+    private static ZExp convertSetToOneExpOR(Set<ZExpression> set) {
+        if (set.size() == 0) {
+            return null;
+        } else if (set.size() == 1) {
+            return set.iterator().next();
+        } else {
+            ZExpression newExp = new ZExpression("OR");
             for (ZExpression exp : set) {
                 newExp.addOperand(exp);
             }
