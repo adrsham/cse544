@@ -471,6 +471,7 @@ public class QueryGeneratorTest {
         db.executeUpdate("INSERT into students values ('Lindsey Nguyen', 16);");
         db.executeUpdate("INSERT into students values ('Lily Sue', 15);");
         db.executeUpdate("INSERT into students values ('Mary Sue', 17);");
+        db.executeUpdate("INSERT into students values ('Larry Dave', 26);");
         ZQuery originalQuery = Main.getQuery("SELECT * from students;");
         original = setupBaseTable3();
         Tuple tup = new Tuple(2);
@@ -491,6 +492,11 @@ public class QueryGeneratorTest {
         tup = new Tuple(2);
         tup.setField(0, new StringField("Mary Sue"));
         tup.setField(1, new IntField(17));
+        original.add(tup);
+        
+        tup = new Tuple(2);
+        tup.setField(0, new StringField("Larry Dave"));
+        tup.setField(1, new IntField(26));
         original.add(tup);
 
         
