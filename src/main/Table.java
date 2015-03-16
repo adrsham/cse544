@@ -3,10 +3,7 @@ package main;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 
 public class Table {
@@ -15,7 +12,6 @@ public class Table {
 
     public Table(TableDescriptor td) {
         this.td = td;
-        // linked list if we plan to add/remove a lot. not sure what we will be doing
         this.tuples = new ArrayList<Tuple>();
     }
 
