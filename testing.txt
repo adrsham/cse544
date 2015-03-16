@@ -1,0 +1,18 @@
+name (text)         	id (text)	gender (text)	major (text)                                   	
+-----------------------------------------------------------------------------------------
+Christian Wiggins   	1926776	Male  	Applied and Computational Mathematical Sciences	
+Jerome Hunt         	2516405	Male  	Applied and Computational Mathematical Sciences	
+Oprah Cochran       	3608133	Male  	Applied and Computational Mathematical Sciences	
+Wylie Hunt          	0090160	Male  	Applied and Computational Mathematical Sciences	
+Kylee Holder        	7503090	Male  	Applied and Computational Mathematical Sciences	
+Bradley Sheppard    	8849023	Male  	Applied and Computational Mathematical Sciences	
+Wesley Cline        	0086572	Male  	Applied and Computational Mathematical Sciences	
+Vivian Prince       	7781798	Male  	Applied and Computational Mathematical Sciences	
+Dominic Noble       	8443032	Male  	Applied and Computational Mathematical Sciences	
+Sade Hall           	2245684	Male  	Applied and Computational Mathematical Sciences	
+Eaton Grimes        	0373044	Male  	Applied and Computational Mathematical Sciences	
+Stuart Clements     	6787042	Male  	Applied and Computational Mathematical Sciences	
+Vincent Daniels     	4532498	Male  	Applied and Computational Mathematical Sciences	
+Frances Flores      	1624550	Male  	Applied and Computational Mathematical Sciences	
+Noble Barr          	0265784	Male  	Applied and Computational Mathematical Sciences	
+Mona Gilbert        	2776980	Male  	Applied and Computational Mathematical Sciences	
